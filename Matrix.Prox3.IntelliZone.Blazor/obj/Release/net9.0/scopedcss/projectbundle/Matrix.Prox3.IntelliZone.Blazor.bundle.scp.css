@@ -1,0 +1,998 @@
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ChartComponents/Table/MatrixReportTable.razor.rz.scp.css */
+.combining-block[b-4j6wjalk3j] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+[b-4j6wjalk3j] .qc-max-width-300 {
+    max-width: 100px;
+    width: 100px;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/Configuration Components/Allocations.razor.rz.scp.css */
+.combining-block[b-4nblc3hpk9] {
+    display : flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+.locator-display-block[b-4nblc3hpk9] {
+    margin: 8px;
+    opacity: 0.8;
+    min-height: 300px;
+    width: 100%;
+    flex : 1;
+    text-align: center;
+    background-Color: lightgray;
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/Configuration Components/ManageEmployees.razor.rz.scp.css */
+.combining-block[b-8rhw1042qt] {
+    display : flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+.locator-display-block[b-8rhw1042qt] {
+    margin: 8px;
+    opacity: 0.8;
+    min-height: 300px;
+    width: 100%;
+    flex : 1;
+    text-align: center;
+    background-Color: lightgray;
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/Filter Components/ReportFilterVertical.razor.rz.scp.css */
+/*.report-filter {
+	width: 100%;
+	padding-left: var(--bs-gutter-x,.75rem);
+	padding-right: var(--bs-gutter-x,.75rem);
+	display: flex;
+	justify-content: space-between;
+	border-radius: 10px;
+	background-Color: lightgray;
+	padding-bottom: var(--bs-gutter-x,.75rem);
+	padding-top: var(--bs-gutter-x,.75rem);
+}*/
+
+[b-jjboabv9ak] .report-filter-sticky {
+	position: sticky;
+	top: 0;
+	z-index: 1020;
+
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/Live Controller Components/AppStatusTable.razor.rz.scp.css */
+/*.combining-block {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}*/
+
+.view-export-block[b-b4itycw1ao] {
+    display: flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 80px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+    align-items: center;
+}
+
+.locator-display-block[b-b4itycw1ao] {
+    margin: 8px;
+    opacity: 0.8;
+    min-height: 300px;
+    width: 100%;
+    flex : 1;
+    text-align: center;
+    background-Color: lightgray;
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/Live Controller Components/InRangeLocator.razor.rz.scp.css */
+.combining-block[b-lksdm8whoq] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/Live Controller Components/InRangeLocatorCount.razor.rz.scp.css */
+.combining-block[b-hzds2znxya] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/Live Controller Components/IOBlock.razor.rz.scp.css */
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/Live Controller Components/LocatorLocationView.razor.rz.scp.css */
+.combining-block[b-y2e4niii7k] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+.location-overview-block[b-y2e4niii7k] {
+    display: flex;
+    flex-direction: row;
+    opacity: 0.8;
+    width: 33%;
+    text-align: center;
+    font-size: 100%;
+    justify-items: center;
+    align-items: center;
+    Color: aliceblue;
+}
+
+.location-block[b-y2e4niii7k] {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/Live Controller Components/LocatorRazor.razor.rz.scp.css */
+/*.oi-locator {
+    width: 2rem;
+   font-size: 1.1rem;
+    vertical-align: text-top;
+    top: -2px;
+}*/
+
+.locator-block[b-tdbjv29haj] {
+    display: flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    min-width: 300px;
+    max-width: 350px;
+    height: 150px;
+    text-align: center;
+    Color: aliceblue;
+    border-radius: 0.75rem;
+    align-items: center;
+    font-size: 4.5rem; /* 96px */
+}
+/*.locator-block {
+    flex: 1;
+    margin: 8px;
+    opacity: 0.8;
+    min-width: 300px;
+    height: 150px;
+    text-align: center;
+    Color: aliceblue;
+    border-radius: 0.75rem;
+    font-size: 4.5rem;*/ /* 96px */
+/*}*/
+
+
+
+.locator-red[b-tdbjv29haj] {
+    background-Color: red;
+}
+
+.locator-green[b-tdbjv29haj] {
+    background-Color: green;
+}
+
+
+.mnid-block[b-tdbjv29haj] {
+    flex: 1;
+    margin: auto;
+    text-align: center;
+    Color: aliceblue;
+    font-size: 2.75rem; /* 96px */
+}
+.name-block[b-tdbjv29haj] {
+    flex: 1;
+    margin: auto;
+    text-align: center;
+    Color: aliceblue;
+    font-size: 1.75rem; /* 96px */
+}
+
+.battery-block[b-tdbjv29haj] {
+    display: flex;
+    width: 40%;
+    justify-items: center;
+    flex-direction: column;
+    background-Color: inherit;
+    Color: aliceblue;
+    align-self: center;
+    border-radius: 0.75rem;
+    font-size: 2.25rem; /* 96px */
+}
+
+.battery-svg[b-tdbjv29haj] {
+    height: 4rem;
+    width: 4rem;
+    align-self: center;
+    Color: rgb(255 255 255);
+}
+
+
+.locator-red[b-tdbjv29haj] {
+    background-Color: red;
+}
+
+.locator-green[b-tdbjv29haj] {
+    background-Color: green;
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/Live Controller Components/LocatorTable.razor.rz.scp.css */
+/*.combining-block {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}*/
+
+.quickgrid[theme=default][b-65o5cdqaw7] {
+    /* Adjust styles to suit your needs */
+    display: block !important;
+    height: auto !important;
+}
+/*.view-export-block {
+    display: flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 80px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+    align-items: center;
+}
+
+.locator-display-block {
+    margin: 8px;
+    opacity: 0.8;
+    min-height: 300px;
+    width: 100%;
+    flex : 1;
+    text-align: center;
+    background-Color: lightgray;
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/Live Controller Components/PDSControllerOverview.razor.rz.scp.css */
+.combining-block[b-y01qh1m82g] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/AppSetup/ChargingPointModal.razor.rz.scp.css */
+.combining-block[b-9upzhi2v9n] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/AppSetup/DeviceModal.razor.rz.scp.css */
+.combining-block[b-q01yckqqtk] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/AppSetup/EmployeeModal.razor.rz.scp.css */
+.combining-block[b-1r2zvvk6ok] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/AppSetup/JobModal.razor.rz.scp.css */
+.combining-block[b-pbr62cwffj] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/AppSetup/JobTitleModal.razor.rz.scp.css */
+.combining-block[b-otg8gv08wm] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/AppSetup/LocationModal.razor.rz.scp.css */
+.combining-block[b-qh0rzz65um] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/AppSetup/LocatorModal.razor.rz.scp.css */
+.combining-block[b-gmyy6zpe9l] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/AppSetup/LoginModal.razor.rz.scp.css */
+.combining-block[b-gv97ey3mx9] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/AppSetup/MineModal.razor.rz.scp.css */
+.combining-block[b-lkiqiahadn] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/AppSetup/ReportModal.razor.rz.scp.css */
+.combining-block[b-5whv59fyfw] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/AppSetup/SectionModal.razor.rz.scp.css */
+.combining-block[b-wsjct3eb8a] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/ConfirmationModal.razor.rz.scp.css */
+.combining-block[b-f8njdkrhcr] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/Reporting/MaintenanceModeModal.razor.rz.scp.css */
+.combining-block[b-oi0uckzo7v] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+[b-oi0uckzo7v] .qc-max-width-300 {
+    max-width: 1500px;
+    width: 100px;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/Reporting/PoweredModal.razor.rz.scp.css */
+.combining-block[b-8s6pifrbno] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+[b-8s6pifrbno] .qc-max-width-300 {
+    max-width: 1500px;
+    width: 100px;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ModalComponents/UploadDataModal.razor.rz.scp.css */
+.combining-block[b-354j2b4upc] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ReportComponents/ReportPages/Diagnostics.razor.rz.scp.css */
+/*.combining-block {
+    display : flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}*/
+
+
+
+
+select.filter-select[b-10j3cu75u9]{
+ 
+}
+
+
+
+/*.info-display-block {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 10px;
+    opacity: 0.8;
+    width: 100%;
+    flex: 1;
+    text-align: center;
+    background-Color: lightgray;
+}*/
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ReportComponents/ReportPages/Interactions.razor.rz.scp.css */
+/*.combining-block {
+    display : flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}*/
+
+
+
+
+select.filter-select[b-otj3785i28]{
+ 
+}
+
+
+
+/*.info-display-block {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 10px;
+    opacity: 0.8;
+    width: 100%;
+    flex: 1;
+    text-align: center;
+    background-Color: lightgray;
+}*/
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ReportComponents/ReportPages/MaintenanceMode.razor.rz.scp.css */
+/*.combining-block {
+    display : flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}*/
+
+
+
+
+select.filter-select[b-oqc82i9gyq]{
+ 
+}
+
+
+
+/*.info-display-block {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 10px;
+    opacity: 0.8;
+    width: 100%;
+    flex: 1;
+    text-align: center;
+    background-Color: lightgray;
+}*/
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ReportComponents/ReportPages/ProxPackageOverview.razor.rz.scp.css */
+/*.combining-block {
+    display : flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}*/
+
+
+
+/*.info-display-block {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 10px;
+    opacity: 0.8;
+    width: 100%;
+    flex: 1;
+    text-align: center;
+    background-Color: lightgray;
+}*/
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/ReportComponents/ReportPages/StaticReports.razor.rz.scp.css */
+/*.combining-block {
+    display : flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}*/
+
+
+
+
+select.filter-select[b-etzt5azvs7]{
+ 
+}
+
+
+
+/*.info-display-block {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 10px;
+    opacity: 0.8;
+    width: 100%;
+    flex: 1;
+    text-align: center;
+    background-Color: lightgray;
+}*/
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/Server Task Components/RunningTasks.razor.rz.scp.css */
+/*.combining-block {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}*/
+
+.view-export-block[b-jh79u7o6bx] {
+    display: flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 80px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+    align-items: center;
+}
+
+.locator-display-block[b-jh79u7o6bx] {
+    margin: 8px;
+    opacity: 0.8;
+    min-height: 300px;
+    width: 100%;
+    flex : 1;
+    text-align: center;
+    background-Color: lightgray;
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/SiteConfigurationComponents/AllocationTable.razor.rz.scp.css */
+.combining-block[b-g77nrtwp2y] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+.locator-display-block[b-g77nrtwp2y] {
+    margin: 8px;
+    opacity: 0.8;
+    min-height: 300px;
+    width: 100%;
+    flex : 1;
+    text-align: center;
+    background-Color: lightgray;
+}
+.hover-row:hover[b-g77nrtwp2y] {
+    background-Color: #0000ff33;
+}
+
+.selected-row[b-g77nrtwp2y] {
+    background-Color: #0000ff77;
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Components/SiteConfigurationComponents/Employees.razor.rz.scp.css */
+.combining-block[b-ys6sz6z81f] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+.locator-display-block[b-ys6sz6z81f] {
+    margin: 8px;
+    opacity: 0.8;
+    min-height: 300px;
+    width: 100%;
+    flex : 1;
+    text-align: center;
+    background-Color: lightgray;
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Home.razor.rz.scp.css */
+.combining-block[b-hr39tlrsgy] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+.locator-display-block[b-hr39tlrsgy] {
+    margin: 8px;
+    opacity: 0.8;
+    min-height: 300px;
+    width: 100%;
+    flex : 1;
+    text-align: center;
+    background-Color: lightgray;
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Live.razor.rz.scp.css */
+
+
+
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Pages/Reporting.razor.rz.scp.css */
+/*.combining-block {
+    display : flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}*/
+
+
+select.filter-select[b-0rkpbfpxve]{
+ 
+}
+
+
+
+/*.info-display-block {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 10px;
+    opacity: 0.8;
+    width: 100%;
+    flex: 1;
+    text-align: center;
+    background-Color: lightgray;
+}*/
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Shared/MainLayout.razor.rz.scp.css */
+
+nav[b-u0hpx3m2vr] {
+    display: flex;
+   
+}
+
+.top-row[b-u0hpx3m2vr] {
+
+    background-Color: white;
+
+    display: flex;
+    justify-content: space-between; /* Change to space-between to separate the image and other elements */
+    height: 4rem;
+    align-items: center; /* Change to align-items to vertically center the items */
+    padding: 5px;
+    padding-bottom: 1rem; /* Add padding to the bottom */
+    
+}
+
+    .top-row img.collapsedIcon[b-u0hpx3m2vr] {
+        margin-right: auto; /* Ensure the image stays on the left */
+    }
+
+    .top-row[b-u0hpx3m2vr]  a, .top-row[b-u0hpx3m2vr]  .btn-link {
+        white-space: nowrap;
+        margin-left: 1.5rem;
+        text-decoration: none;
+    }
+
+        .top-row[b-u0hpx3m2vr]  a:hover, .top-row[b-u0hpx3m2vr]  .btn-link:hover {
+            text-decoration: underline;
+        }
+
+        .top-row[b-u0hpx3m2vr]  a:first-child {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+@media (max-width: 100.98px) {
+    .top-row:not(.auth)[b-u0hpx3m2vr] {
+        display: none;
+    }
+
+    .top-row.auth[b-u0hpx3m2vr] {
+        justify-content: space-between;
+    }
+
+    .top-row[b-u0hpx3m2vr]  a, .top-row[b-u0hpx3m2vr]  .btn-link {
+        margin-left: 0;
+    }
+}
+
+.filter-container[b-u0hpx3m2vr] {
+    display: flex; /* d-flex */
+    flex-direction: column; /* d-md-block for medium screens and up */
+    background-Color: white; /* Replace bg-secondary-subtle with white */
+    border-radius: 0.75rem; /* rounded-3 */
+    margin-bottom: 0.5rem; /* mb-2 */
+    margin-top: 1.5rem; /* mt-5 */
+    padding-bottom: 1rem; /* pb-3 */
+    padding-top: 1rem; /* pt-3 */
+}
+
+.graph-container[b-u0hpx3m2vr] {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 0;
+    width: 100%;
+    padding-right: calc(var(--bs-gutter-x)* .5);
+    padding-left: calc(var(--bs-gutter-x)* .5);
+    margin-right: auto;
+    margin-left: auto;
+    background-Color: white !important;
+}
+.collapsedIcon[b-u0hpx3m2vr] {
+    padding: 5px;
+    width: 7.5rem;
+    height: 3rem;
+    font-size: 1.5rem;
+    float: left;
+    margin-top: 0.75rem;
+}
+
+.quickgrid[theme=default][b-u0hpx3m2vr] {
+    --col-gap: 0 !important;
+}
+
+@media (min-width: 641px) {
+    .page[b-u0hpx3m2vr] {
+        flex-direction: row;
+    }
+
+    /*.sidebar {
+        width: 180px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }*/
+
+    .top-row[b-u0hpx3m2vr] {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+        .top-row.auth[b-u0hpx3m2vr]  a:first-child {
+            flex: 1;
+            text-align: right;
+            width: 0;
+        }
+
+    .top-row[b-u0hpx3m2vr], article[b-u0hpx3m2vr] {
+        padding-left: 2rem !important;
+        padding-right: 1.5rem !important;
+    }
+}
+/* _content/Matrix.Prox3.IntelliZone.Blazor/Shared/NavMenu.razor.rz.scp.css */
+.navbar-toggler[b-t402rx79b9] {
+    background-Color: rgba(255, 255, 255, 0.1);
+}
+
+.top-row[b-t402rx79b9] {
+    height: 5.5rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-brand[b-t402rx79b9] {
+    font-size: 1.1rem;
+}
+
+
+btn.navbar[b-t402rx79b9] {
+    background-Color: transparent;
+
+}
+
+.oi[b-t402rx79b9] {
+    width: 2rem;
+    font-size: 1.1rem;
+    vertical-align: text-top;
+    top: -2px;
+}
+
+.nav-item[b-t402rx79b9] {
+    display: flex !important;
+    position: relative !important;
+    width: 100% !important;
+    margin-bottom: 0.5rem !important;
+    transition: transform 0.3s ease;
+}
+
+.nav-item-content[b-t402rx79b9] {
+    display: flex;
+    align-items: center;
+    width: 100%; /* Ensure the content takes the full width */
+}
+
+    .nav-item-content img[b-t402rx79b9] {
+        margin-right: 5px; /* Adjust the margin as needed */
+    }
+
+.nav-item:hover .nav-item-content[b-t402rx79b9],
+.nav-item[b-t402rx79b9]  a:hover,
+.nav-item[b-t402rx79b9]  .nav-link:hover {
+    background-Color: white !important; /* Ensure background is white on hover */
+    border-radius: 5px;
+    padding: 5px; /* Add padding to ensure the hover effect covers the entire content */
+    Color: black !important; /* Ensure text Color is black on hover */
+}
+
+    .nav-item:hover .nav-item-content img[b-t402rx79b9],
+    .nav-item:hover .nav-item-content span[b-t402rx79b9] {
+        Color: black !important; /* Ensure text Color is black on hover */
+        filter: none; /* Remove any filter on hover */
+    }
+
+.nav-L1[b-t402rx79b9] {
+    font-weight: bold;
+}
+
+.nav-L2[b-t402rx79b9] {
+    font-style: italic;
+}
+
+.nav-item[b-t402rx79b9]  a.active,
+.nav-item[b-t402rx79b9]  a:active,
+.nav-item[b-t402rx79b9]  a:focus,
+.nav-item[b-t402rx79b9]  .nav-link.active,
+.nav-item[b-t402rx79b9]  .nav-link:active,
+.nav-item[b-t402rx79b9]  .nav-link:focus {
+    background-Color: white !important; /* Ensure background is white when active */
+    Color: black !important; /* Ensure text Color is black when active */
+}
+
+
+.nav-item[b-t402rx79b9]  a:hover,
+.nav-item[b-t402rx79b9]  .nav-link:hover {
+    Color: black !important; /* Ensure text Color is black on hover */
+    background-Color: white !important;
+}
+
+.nav-item-icon[b-t402rx79b9] {
+    width: 2.5rem; /* Adjust the width as needed */
+    height: 2.5rem; /* Adjust the height as needed */
+    flex-shrink: 0; /* Prevent the icon from resizing */
+    margin: 0; /* Remove extra margins */
+    padding: 5px; /* Adjust padding if needed */
+    transition: transform 0.3s ease; /* Smooth scaling on hover */
+}
+
+    .nav-item-icon:hover[b-t402rx79b9] {
+        filter: none; /* Remove any filter on hover */
+    }
+
+.collapsedIcon[b-t402rx79b9] {
+    padding: 5px;
+    width: 3rem;
+    height: 6rem;
+    font-size: 1.5rem;
+
+}
+
+.navbar-toggler[b-t402rx79b9] {
+    display: flex;
+    align-items: center;
+    justify-items: center;
+}
+
+@media (min-width: 50px) {
+    .navbar-toggler[b-t402rx79b9] {
+        display: block;
+    }
+}

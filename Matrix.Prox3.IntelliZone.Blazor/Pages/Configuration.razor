@@ -1,0 +1,175 @@
+﻿@page "/configuration"
+@using System.IO.Compression
+@using Matrix.Prox3.IntelliZone.Data.Enums
+@using System.Threading.Tasks
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager MyNavigationManager
+@inject NavigationManager uriHelper
+@inject HubConnection hubConnection 
+@inject IConfiguration configuration
+@using Newtonsoft.Json
+
+
+@inject HttpClient http
+
+<PageTitle>Tools</PageTitle>
+
+<body>
+
+
+	<AuthorizeView>
+		<Authorized>
+			@* <div >class="tab-selector"> *@
+			<div>
+				<Tabs Class="tab-selector">
+					@if ( appConfiguration != AppConfiguration.CloudReporting)
+					{
+					<Tab Title="Employees" Class="fw-bolder tab-selector">
+
+							<Content>
+								
+									<div class="table-container">
+
+										<Employees />
+									</div>
+								
+						</Content>
+					</Tab>
+					<Tab Title="Allocations" Class="fw-bolder tab-selector">
+						<Content>
+							
+
+								<div class="table-container">
+
+									<AllocationTable />
+								</div>
+							
+						</Content>
+					</Tab>
+					<Tab Title="Devices" Class="fw-bolder tab-selector">
+						<Content>
+							<div class="d-flex flex-row">
+								<div class="table-container">
+									<DevicesTable />
+								</div>
+									<div class="table-container">
+										<Locators />
+									</div>
+							</div>
+						</Content>
+					</Tab>
+					}
+					<Tab Title="Areas" Class="fw-bolder tab-selector" Active="true">
+						<Content>
+							
+								<div class="table-container">
+
+									<MinesTable />
+								</div>
+								<div class="table-container">
+
+									<SectionsTable />
+								</div>
+
+						</Content>
+					</Tab>
+
+				</Tabs>
+			</div>
+		</Authorized>
+		<NotAuthorized>
+			Please login to view this page
+		</NotAuthorized>
+	</AuthorizeView>
+
+</body>
+
+
+
+@code {
+
+	private List<BlazorControllerReport> ControllerReports = new();
+	private AppConfiguration appConfiguration;
+
+	private string status = "Start";
+	private uint? MNID = null;
+	private string controllerIP = "";
+
+	protected override async Task OnInitializedAsync()
+	{
+		appConfiguration = Enum.Parse<AppConfiguration>(configuration["AppConfiguration"], true);
+		hubConnection.On<string>("intellizonecontrollerlistener", async (strdata) =>
+		{
+			BlazorControllerReport cdata = JsonConvert.DeserializeObject<BlazorControllerReport>(strdata);
+			var temp = ControllerReports.FirstOrDefault(s => s.IP == cdata.IP);
+			if (temp != null && cdata != null)
+			{
+
+				ControllerReports.Remove(temp);
+				ControllerReports.Add(cdata);
+				await InvokeAsync(StateHasChanged);
+			}
+			else
+			{
+				ControllerReports.Add(cdata);
+				await InvokeAsync(StateHasChanged);
+			}
+		});
+
+
+	}
+
+
+
+
+
+	private async void SelectController(string e)
+	{
+		if (e != null && e != string.Empty)
+		{
+
+			controllerIP = e;
+
+			var result = await http.GetAsync($"api/MatrixDevices/startdiagnostics/{controllerIP}");
+			if (result.IsSuccessStatusCode)
+			{
+				status = result.Content.ReadAsStringAsync().Result;
+			}
+
+        }
+	}
+
+	private async void SelectMNID(uint? e)
+	{
+		if (e != null )
+		{
+
+			MNID = e;
+
+		
+		}
+	}
+
+	private async void Start()
+	{
+
+		var result = await http.GetAsync($"api/MatrixDevices/startdiagnostics/{controllerIP}");
+		if (result.IsSuccessStatusCode)
+		{
+			status = result.Content.ReadAsStringAsync().Result;
+		}
+
+	}
+
+	private async void Stop()
+	{
+
+		var result = await http.GetAsync($"api/MatrixDevices/stopdiagnostics/{controllerIP}");
+		if (result.IsSuccessStatusCode)
+		{
+			status = result.Content.ReadAsStringAsync().Result;
+		}
+
+	}
+}
+ 

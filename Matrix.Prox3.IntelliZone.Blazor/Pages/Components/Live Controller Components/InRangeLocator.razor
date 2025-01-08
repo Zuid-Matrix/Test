@@ -1,0 +1,51 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@* @inject IDbContextFactory<ProxLocalConnectionContext> _ctxFactory *@
+@using Microsoft.EntityFrameworkCore
+@using System.Threading.Tasks
+@using System.Drawing
+@using System.Data;
+@using Matrix.Prox3.IntelliZone.Data.Data;
+
+
+
+@if (ControllerReports.Any())
+{
+	foreach (var device in ControllerReports)
+	{
+		
+		<div class="rounded-xl d-flex flex-wrap">
+			@foreach (var locator in device.ActiveLocators.Where(s => s.locatorProximityState == LocatorProximityState.AtMachine && s.LocatorType != LocatorType.LOCATOR_TYPE_MML).OrderByDescending(s => s.loc_test_status))
+				{
+					
+					try
+					{
+					
+						if (locator.allocation != null)
+						{
+							<LocatorRazor ActiveLocator="@locator" Employee="@locator.allocation.Employee" />
+						}
+						else
+						{ 
+							<LocatorRazor ActiveLocator="@locator" />
+						}
+					}
+					catch (NullReferenceException ex)
+					{
+						<LocatorRazor ActiveLocator="@locator" />
+					}
+				} 
+			</div>
+	}
+}
+
+
+
+
+
+@code {
+	
+	[Parameter]
+	public List<BlazorControllerReport> ControllerReports { get; set; }
+
+
+}

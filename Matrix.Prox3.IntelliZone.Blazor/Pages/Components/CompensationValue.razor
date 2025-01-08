@@ -1,0 +1,59 @@
+﻿
+
+@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+
+<div class="p-1 info-display-block-33">
+    @if (Value != null)
+    {
+        <div>
+            <div class="fw-bold"> Driver @Value.driver</div>
+            <div class="d-flex justify-content-between">
+                <div>
+                    Base: 
+                </div>
+                <div>
+                    @Math.Round(Value.baseDist, 1)
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <div>
+                    Compensation:
+                </div>
+                <div> @Math.Round(Value.compDist, 1)</div>
+            </div>
+            <div class="d-flex justify-content-between">
+                <div> Final: </div>
+                <div>@Math.Round((float)Value.finalDist, 1)
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <div> Angle:</div>
+                <div> @(Value.intAngle < 0 ? 360 + Value.intAngle : Value.intAngle) </div> 
+
+            </div>
+            <div class="d-flex justify-content-between">
+                <div> Angle 2:</div>
+                <div> @(Value.intAngle) </div>
+            </div>
+        </div>
+    }
+    else
+    {
+                <div>Connect Controller To see values</div>
+    }
+
+ </div>
+
+@code {
+
+
+
+    [Parameter]
+    public CompensationPoint? Value { get; set; }
+
+
+
+
+}

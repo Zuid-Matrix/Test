@@ -1,0 +1,228 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using System.IO.Compression
+@using Matrix.Prox3.IntelliZone.Data.Reporting
+@using System.Threading.Tasks
+@using System.Globalization
+@using Matrix.Prox3.IntelliZone.Data.Models
+@using Matrix.Prox3.IntelliZone.Data.Models.Reporting
+@using ClosedXML
+@using ClosedXML.Excel
+@using Newtonsoft.Json.Serialization
+@using System.Diagnostics
+@using Matrix.Prox3.IntelliZone.Data.VolatileStorage
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Matrix.Prox3.IntelliZone.Data.Models.MatrixChart
+@inject HttpClient http
+@inject IJSRuntime js
+
+
+<AuthorizeView>
+	<Authorized>
+	@if (busy == false )
+	{
+
+			<div class="table-container">
+			@if (Packages != null && Packages.Any())
+			{
+				
+					<div class="page-size-chooser">
+						Items per page:
+						<select @bind="@pagination.ItemsPerPage">
+							<option value="10">10</option>
+							<option value="20">20</option>
+							<option value="50">50</option>
+							<option value="100">100</option>
+							<option value="200">200</option>
+						</select>
+					</div>
+					<QuickGrid Class="table responsive-table" Virtualize="false" Items="@Packages.AsQueryable()" TGridItem="PackageInfo" Pagination="@pagination">
+						<PropertyColumn Property="@(p => p.Machine!.Section!.Mine.MineName)" Title="Mine" Sortable="true" />
+ 						<PropertyColumn Property="@(p => p.Machine!.Section!.SectionName)" Title="Section" Sortable="true"/>
+						<PropertyColumn Property="@(p => p.Machine!.MachName)" Title="Machine" Sortable="true"/>
+						<PropertyColumn Property="@(p => p.StartDate)" Title="Start Date" Format="yyyy/MM/dd" Sortable="true"/>
+						<PropertyColumn Property="@(p => p.EndDate)" Title="End Date" Format="yyyy/MM/dd" Sortable="true" />
+						<PropertyColumn Property="@(p => p.uploadDate)" Title="Upload Date" Format="yyyy/MM/dd" Sortable="true" />
+						<PropertyColumn Property="@(p => p.UploadedBy)" Title="Upload By" Sortable="true"/>
+						<PropertyColumn Property="@(p => p.PackageName.Replace(".proxlogpckg", "").Replace("001A57-", ""))" Title="Package Name" Sortable="true"/>
+						<PropertyColumn Property="@(p => p.Eventsuploaded)" Title="Events Uploaded" Sortable="true"/>
+						<TemplateColumn Title="Download Report">
+							<ChildContent Context="itemContext">
+								<button class="btn btn-light" @onclick="@(() => DownloadReport(itemContext))">Download</button>
+							</ChildContent>
+						</TemplateColumn>
+						<TemplateColumn Title="Re-Process">
+							<ChildContent Context="itemContext">
+								<button class="btn btn-light" @onclick="@(() => Reload(itemContext))">Re-Process</button>
+							</ChildContent>
+						</TemplateColumn>
+						<TemplateColumn Title="Download all Events">
+							<ChildContent Context="itemContext">
+								<button class="btn btn-light" @onclick="@(() => Download(itemContext))">Download all Events</button>
+							</ChildContent>
+						</TemplateColumn>
+					</QuickGrid>
+						<Paginator State="@pagination" />
+			
+		
+
+		}
+		else
+		{
+			<p>No data for the dates selected</p>
+		}
+
+ 	</div>
+@* 			<Button Size="ButtonSize.ExtraLarge" Class="w-100" Outline="true" @onclick="Verify" Color="ButtonColor.Primary">
+				Verify
+			</Button> *@
+	}
+	else
+	{
+
+			<NoData />
+
+
+	}
+</Authorized>
+<NotAuthorized>
+	Please login to view this page
+	</NotAuthorized>
+</AuthorizeView>
+
+
+
+@code {
+	[CascadingParameter] public IModalService Modal { get; set; } = default!;
+	private bool isLoading = false;
+
+	[Parameter]
+	public List<PackageInfo>? Packages { get; set; }
+
+	PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+
+	private bool busy = false;
+
+	public async void Download(PackageInfo package)
+	{
+		List<int> sheets = new();
+		sheets.Add(12);
+		busy = true;
+		await InvokeAsync(StateHasChanged);
+		byte[]? response = null;
+		var tempstring = "api/File/excelreportbypackage?";
+		foreach (var sheet in sheets)
+		{
+			tempstring += $"sheets={sheet}&";
+		}
+		//tempstring = tempstring.Remove(tempstring.Length - 1);
+		tempstring += $"package={package.PackageName}";
+		var result = await http.GetAsync($"{tempstring}");
+		Debug(result);
+		if (result.IsSuccessStatusCode)
+		{
+			var file = await result.Content.ReadFromJsonAsync<MatrixFile>();
+
+			try
+			{
+				var filename = $"{package.Machine!.Section!.SectionName}_{package.Machine.MachName}_{package.PackageName.Replace(".proxlogpkg", "")}";
+				filename += ".xlsx";
+
+
+				await js.InvokeVoidAsync("BlazorDownloadFile", filename,file!.FileContent);
+
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
+			}
+		}
+		else
+		{
+			Console.WriteLine(await result.Content.ReadAsStringAsync());
+		}
+
+		busy = false;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	public async Task DownloadReport(PackageInfo package)
+	{
+		List<int> sheets = new();
+		sheets.Add(0);
+		sheets.Add(1);
+		sheets.Add(3);
+		sheets.Add(6);
+		sheets.Add(10);
+		busy = true;
+		await InvokeAsync(StateHasChanged);
+		byte[]? response = null;
+		var tempstring = "api/File/excelreportbypackage?";
+		foreach (var sheet in sheets)
+		{
+			tempstring += $"sheets={sheet}&";
+		}
+		//tempstring = tempstring.Remove(tempstring.Length - 1);
+		tempstring += $"package={package.PackageName}";
+		var result = await http.GetAsync($"{tempstring}");
+		Debug(result);
+		if (result.IsSuccessStatusCode)
+		{
+			var file = await result.Content.ReadFromJsonAsync<MatrixFile>();
+
+			try
+			{
+				var filename = $"{package.Machine!.Section!.SectionName}_{package.Machine.MachName}_{package.PackageName.Replace(".proxlogpkg", "")}";
+				filename += ".xlsx";
+
+
+				await js.InvokeVoidAsync("BlazorDownloadFile", filename, file!.FileContent);
+
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
+			}
+		}
+		else
+		{
+			Console.WriteLine(await result.Content.ReadAsStringAsync());
+		}
+
+		busy = false;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	public void Debug(HttpResponseMessage response)
+	{
+		Console.WriteLine(response);
+	}
+
+
+	public async void Reload(PackageInfo package)
+	{
+
+		var tempstring = "api/File/reprocess?";
+		tempstring += $"package={package.PackageName}";
+		var result = await http.GetAsync($"{tempstring}");
+		await InvokeAsync(StateHasChanged);
+	}
+
+
+	public async Task Verify()
+	{
+
+		foreach (var package in Packages!)
+		{
+			var tempstring = $"api/EventlogReports/count?package={package.PackageName}";
+			
+			package.LocatorReports = await http.GetFromJsonAsync<int>($"{tempstring}");
+			
+		}
+		await InvokeAsync(StateHasChanged);
+	}
+
+
+
+
+}

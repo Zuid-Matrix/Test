@@ -1,0 +1,81 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@inject ExcelReportBuilder _report
+@using Matrix.Prox3.IntelliZone.Data.Reporting
+@using Matrix.Prox3.IntelliZone.Data.Models.Reporting
+			
+
+
+
+		<div class="info-display-block bg-secondary-subtle rounded-xl">
+			<div>
+				
+				<div class="m-4 flex flex-row">
+					<div class="page-size-chooser">
+						Items per page:
+						<select @bind="@pagination.ItemsPerPage">
+							<option>10</option>
+							<option>20</option>
+							<option>50</option>
+							<option>100</option>
+							<option>200</option>
+						</select>
+					</div>
+					
+				</div>
+				@if (tempList != null)
+				{
+			foreach (var machine in machines)
+			{
+				//var templist = _report.GenerateHoursUsed(machine.MachName, tempList).AsQueryable();
+				<div class="mb-3">
+@* 				<QuickGrid class="table-bordered background-inherit" Items="@templist" TGridItem="HoursUsed" Pagination="@pagination">
+					<PropertyColumn Property="@(p => p.Date)" Title="Date" Sortable="true" />
+					<PropertyColumn Property="@(p =>  p.MachineName)" Title="Section" Sortable="true" />
+					<PropertyColumn Property="@(p =>  p.Hour)" Title="Section" Sortable="true" />
+				</QuickGrid>
+				<Paginator State="@pagination" /> *@
+			
+			
+				</div>
+			
+			}
+
+				}
+
+			</div>
+		</div>
+
+
+	
+
+	
+
+
+
+@code {
+
+	[CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+
+	[Parameter]
+	public List<EventlogReport>? tempList { get; set; }
+	PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+
+	private List<Machine> machines = new();
+
+
+	protected override async Task OnInitializedAsync()
+	{
+
+	machines = tempList!.Select(s => s.Package!.Machine!).Distinct().ToList();
+	}
+
+	
+
+
+
+	private async Task Close() => await BlazoredModal.CloseAsync();
+
+
+}

@@ -1,0 +1,379 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using System.IO.Compression
+@using Matrix.Prox3.IntelliZone.Blazor.Components
+@using System.Threading.Tasks
+@using System.Globalization
+@using ClosedXML
+@using ClosedXML.Excel
+@using MudBlazor
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
+@using System.Diagnostics
+@using Matrix.Prox3.IntelliZone.Data.Models
+@using Matrix.Prox3.IntelliZone.Data.Models.Reporting
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Matrix.Prox3.IntelliZone.Data.VolatileStorage
+
+@inject IJSRuntime js
+
+<div class="">
+	<AuthorizeView>
+		<Authorized>
+			
+
+			@if (busy == false )
+			{
+
+ 
+				<div class="graph-container">
+				
+				@if(Summaries_ZoneBreach != null && Summaries_ZoneBreach.Any())
+				{
+					@if (SelectedSections != null && SelectedSections.Count() != 1 && SelectedSections != null)
+					{
+							<Carousel Autoplay="CarouselAutoPlay.StartOnPageLoad">
+							<CarouselItem Active="true">
+									@* Number of Shutdowns *@
+									<Shutdowns Summaries_ZoneBreach="Summaries_ZoneBreach"
+											   TopN="TopN"
+											   Interval="Interval"
+											   ChartTypeBar="ChartTypeBar"
+											   level="1" />
+								
+							</CarouselItem>
+							<CarouselItem>
+									@* Number of Warnings *@
+									<Warnings Summaries_ZoneBreach="Summaries_ZoneBreach"
+											  TopN="TopN"
+											  Interval="Interval"
+											  ChartTypeBar="ChartTypeBar"
+											  level="1" />
+							</CarouselItem>
+							<CarouselItem>
+									@* Number of Shutdowns by Operator *@
+									<div id="shutdowns" class="d-block d-lg-flex graph-category-block ">
+										<div class="col-md-9">
+											@if (ChartTypeBar == false)
+											{
+												<MatrixLine SumValues=true
+															TopN=@TopN
+															Interval="@Interval"
+															Title="Shutdowns By Operator"
+															Label="Count"
+															events="Summaries_ZoneBreach.Select(s => new MatrixGeneralChartData{
+										Category = s.myMachine.Section.SectionName,
+										value = s.Shutdowns_oper_mode == null ? 0: (decimal)s.Shutdowns_oper_mode,
+										Date = s.Date, Color= s.myMachine.Section.Color}).ToList()" />
+											}
+											else
+											{
+												<Bar SumValues=true
+													 Interval="@Interval"
+													 TopN="@TopN"
+													 Title="Shutdowns By Operator"
+													 Label="Count"
+													 events="Summaries_ZoneBreach.Select(s => new MatrixGeneralChartData{ Category = s.myMachine.Section.SectionName, value = s.Shutdowns_oper_mode == null ? 0: (decimal)s.Shutdowns_oper_mode, Date = s.Date, Color= s.myMachine.Section.Color}).ToList()" />
+
+											}
+										</div>
+										<div class="col-md-3">
+											<div>
+												<Pie TopN="@TopN"
+													 Title="Shutdowns By Operator"
+													 Label="Count"
+													 events="Summaries_ZoneBreach.GroupBy(s =>
+												s.myMachine.Section.SectionName).Select(s => new MatrixPieChartData{
+												Category = s.Key,
+												value=s.Sum(x=>x.Shutdowns_oper_mode),
+												Color = s.FirstOrDefault(x=>x.myMachine.Section.SectionName == s.Key).myMachine.Section.Color
+												}).ToList()" />
+											</div>
+											@* 									<div>
+										<MatrixReportTable Title="Shutdowns By Operator"
+														   Label="Section"
+														   tempList="Summaries_ZoneBreach.GroupBy(s =>
+												s.myMachine.Section.SectionName).Select(s => new MatrixTableChartData{
+												Category = s.Key,
+												value=s.Sum(x=>x.Shutdowns_oper_mode)
+												}).ToList()"/>
+
+									</div> *@
+										</div>
+									</div>
+							</CarouselItem>
+							<CarouselItem>
+									@* Shutdown % by operator*@
+									<div id="shutdowns0" class="d-block d-lg-flex graph-category-block ">
+										<div class="col-md-9">
+											@if (ChartTypeBar == false)
+											{
+												<MatrixLine SumValues=true
+															TopN="@TopN"
+															Interval="@Interval"
+															Title="% Shutdowns by Operator"
+															Label="%"
+															events="Summaries_ZoneBreach.Select(s => new MatrixGeneralChartData{
+										Category = s.myMachine.Section.SectionName,
+										value = s.Shutdowns == null || s.Shutdowns == 0 ? 0: ( (decimal)s.Shutdowns_oper_mode/ (decimal)s.Shutdowns),
+										Date = s.Date, Color= s.myMachine.Section.Color}).ToList()" />
+											}
+											else
+											{
+												<Bar SumValues=true
+													 TopN="@TopN"
+													 Interval="@Interval"
+													 Title="% Shutdowns by Operator"
+													 Label="%"
+													 events="Summaries_ZoneBreach.Select(s => new MatrixGeneralChartData{ Category = s.myMachine.Section.SectionName, value = s.Shutdowns == null || s.Shutdowns == 0 ? 0: ( (decimal)s.Shutdowns_oper_mode/ (decimal)s.Shutdowns), Date = s.Date, Color= s.myMachine.Section.Color}).ToList()" />
+
+											}
+										</div>
+										<div class="col-md-3">
+											<div>
+												<Pie TopN=@TopN
+													 Title="% Shutdowns by Operator"
+													 Label="Count"
+													 events="Summaries_ZoneBreach.GroupBy(s =>
+												s.myMachine.Section.SectionName).Select(s => new MatrixPieChartData{
+												Category = s.Key,
+												value = (double)s.Sum(x=> x.Shutdowns == null || x.Shutdowns == 0 ? 0: ( (decimal)x.Shutdowns_oper_mode/ (decimal)x.Shutdowns)),
+												Color = s.FirstOrDefault(x=>x.myMachine.Section.SectionName == s.Key).myMachine.Section.Color
+												}).ToList()" />
+											</div>
+											@* <div>
+										<MatrixReportTable Title="% Shutdowns by Operator"
+														   Label="Section"
+														   Unit="%"
+														   tempList="Summaries_ZoneBreach.GroupBy(s =>
+								s.myMachine.Section.SectionName).Select(s => new MatrixTableChartData{
+								Category = s.Key,
+								value = (double)s.Sum(x=> x.Shutdowns == null || x.Shutdowns == 0 ? 0: ( (decimal)x.Shutdowns_oper_mode/ (decimal)x.Shutdowns)),
+								}).ToList()"/>
+
+									</div> *@
+										</div>
+									</div>
+							</CarouselItem>
+						</Carousel>
+						
+					
+					}
+					else
+					{
+						<Carousel>
+							<CarouselItem>
+									@* Number of Shutdowns *@
+									<Shutdowns Summaries_ZoneBreach="Summaries_ZoneBreach"
+											   TopN="@TopN"
+											   Interval="Interval"
+											   ChartTypeBar="ChartTypeBar"
+											   level="2" />
+							</CarouselItem>
+							<CarouselItem>
+									@* Number of Warnings *@
+									<Warnings Summaries_ZoneBreach="Summaries_ZoneBreach"
+											  TopN="@TopN"
+											  Interval="Interval"
+											  ChartTypeBar="ChartTypeBar"
+											  level="2" />
+							</CarouselItem>
+							<CarouselItem>
+									@* Number of Shutdowns by Operator *@
+									<div id="shutdowns0" class="d-block d-lg-flex graph-category-block ">
+										<div class="col-md-9">
+											@if (ChartTypeBar == false)
+											{
+												<MatrixLine SumValues=true
+															TopN="@TopN"
+															Interval="@Interval"
+															Title="Shutdowns By Operator"
+															Label="Count"
+															events="Summaries_ZoneBreach.Select(s => new MatrixGeneralChartData{
+																Category = s.myMachine.MachName,
+																Color = s.myMachine.Color,
+																value = s.Shutdowns_oper_mode == null ? 0: (decimal)s.Shutdowns_oper_mode,
+																Date = s.Date}).ToList()" />
+											}
+											else
+											{
+												<Bar SumValues=true
+													 TopN="@TopN"
+													 Interval="@Interval"
+													 Title="Shutdowns By Operator"
+													 Label="Count"
+													 events="Summaries_ZoneBreach.Select(s => new MatrixGeneralChartData{ Category = s.myMachine.MachName, Color = s.myMachine.Color, value = s.Shutdowns_oper_mode == null ? 0: (decimal)s.Shutdowns_oper_mode, Date = s.Date}).ToList()" />
+
+											}
+										</div>
+										<div class="col-md-3">
+											<div>
+												<Pie TopN="@TopN"
+													 Title="Number of Shutdowns"
+													 Label="Count"
+													 events="Summaries_ZoneBreach.GroupBy(s =>
+														s.myMachine.MachName).Select(s => new MatrixPieChartData{
+														Category = s.Key,
+														Color = s.FirstOrDefault(x=>x.myMachine.MachName == s.Key).myMachine.Color,
+														value=s.Sum(x=>x.Shutdowns_oper_mode)
+														}).ToList()" />
+											</div>
+											@* 								<div>
+										<MatrixReportTable Title="Number of Shutdowns"
+														   Label="Section"
+														   tempList="Summaries_ZoneBreach.GroupBy(s =>
+																s.myMachine.MachName).Select(s => new MatrixTableChartData{
+																Category = s.Key,
+																value=s.Sum(x=>x.Shutdowns_oper_mode)
+																}).ToList()"/>
+
+									</div> *@
+										</div>
+									</div>
+							</CarouselItem>
+							<CarouselItem>
+									@* Shutdown % by operator*@
+									<div id="shutdowns0" class="d-block d-lg-flex graph-category-block ">
+										<div class="col-md-9">
+											@if (ChartTypeBar == false)
+											{
+												<MatrixLine SumValues=true
+															TopN="@TopN"
+															Interval="@Interval"
+															Title="% Shutdowns by Operator"
+															Label="Count"
+															events="Summaries_ZoneBreach.Select(s => new MatrixGeneralChartData{
+																Category = s.myMachine.MachName,
+																Color = s.myMachine.Color,
+																value = s.Shutdowns == null || s.Shutdowns == 0 ? 0: ( (decimal)s.Shutdowns_oper_mode/ (decimal)s.Shutdowns),
+																Date = s.Date}).ToList()" />
+											}
+											else
+											{
+												<Bar SumValues=true
+													 Interval="@Interval"
+													 TopN="TopN"
+													 Title="% Shutdowns by Operator"
+													 Label="Count"
+													 events="Summaries_ZoneBreach.Select(s => new MatrixGeneralChartData{ 
+														Category = s.myMachine.MachName,  
+														Color = s.myMachine.Color , 
+														value = s.Shutdowns == null || s.Shutdowns == 0 ? 0: ( (decimal)s.Shutdowns_oper_mode/ (decimal)s.Shutdowns),
+														Date = s.Date}).ToList()" />
+
+											}
+										</div>
+										<div class="col-md-3">
+											<div>
+												<Pie TopN=@TopN
+													 Title="% Shutdowns by Operator"
+													 Label="Count"
+													 events="Summaries_ZoneBreach.GroupBy(s =>
+														s.myMachine.MachName).Select(s => new MatrixPieChartData{
+														Category = s.Key,
+														Color = s.FirstOrDefault(x=>x.myMachine.MachName == s.Key).myMachine.Color,
+														value = (double)s.Sum(x=> x.Shutdowns == null || x.Shutdowns == 0 ? 0:  (decimal)x.Shutdowns_oper_mode/(decimal)x.Shutdowns)}).ToList()" />
+											</div>
+											@* 									<div>
+										<MatrixReportTable Title="% Shutdowns by Operator"
+														   Label="Machine"
+														   Unit="%"
+														   tempList="Summaries_ZoneBreach.GroupBy(s =>
+																s.myMachine.MachName).Select(s => new MatrixTableChartData{
+																Category = s.Key,
+																value = (double)s.Sum(x=> x.Shutdowns == null || x.Shutdowns == 0 ? 0: ( (decimal)x.Shutdowns_oper_mode/ (decimal)x.Shutdowns)),
+																}).ToList()"/>
+
+									</div> *@
+										</div>
+									</div>
+							</CarouselItem>
+							<Carousel>
+									<div class="graph-category-block d-md-flex">
+										<div class="col-md-9">
+											<ZoneBreachMNIDShutdown Summaries_ZoneBreach="@Summaries_ZoneBreach" Interval="@Interval" DateFrom="(DateTime)DateRange.Start" DateTo="(DateTime)DateRange.End" />
+										</div>
+										<div>
+											<MatrixReportTable Title="Shutdowns by Locator"
+															   Label="Locator"
+															   tempList="Summaries_ZoneBreach.GroupBy(s =>
+														s.myLocator.MNID).Select(s => new MatrixTableChartData{
+														Category = s.Key,
+														value = (double)s.Sum(x=> x.Shutdowns == null || x.Shutdowns == 0 ? 0:  (decimal)x.Shutdowns)
+														}).OrderByDescending(s=>s.value).ToList()" />
+
+										</div>
+									</div>
+								</Carousel>
+						</Carousel>
+							
+					}
+				
+				
+				}
+			
+	 		</div>
+				
+			}
+			else
+			{
+				<span class="loader-small"></span>
+			}
+		</Authorized>
+		<NotAuthorized>
+			Please login to view this page
+			</NotAuthorized>
+		</AuthorizeView>
+		
+@* Report Page *@
+</div>
+
+
+
+
+
+@code {
+	[CascadingParameter] public IModalService Modal { get; set; } = default!;
+
+	private bool isLoading = false;
+
+	[Parameter]
+	public List<ZoneBreachSummary>? Summaries_ZoneBreach { get; set; }
+
+	[Parameter]
+	public DateRange DateRange { get; set; }
+
+	[Parameter]
+	public int Interval  { get; set; }
+
+	[Parameter]
+	public int Duration  { get; set; }
+
+	[Parameter]
+	public bool ChartTypeBar { get; set; }
+
+	[Parameter]
+	public int? TopN {get; set; }
+
+	[Parameter]
+	public int[] SelectedSections   {get; set; }
+
+	
+
+
+
+	bool showdate = true;
+	PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+
+	private bool ReportsAvailable = false;
+	private bool busy = false;
+
+
+
+
+
+
+
+
+
+}

@@ -1,0 +1,148 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Matrix.Prox3.IntelliZone.Data.Models.Reporting
+@using Matrix.Prox3.IntelliZone.Data.Models.MatrixChart
+@* Number of Shutdowns *@
+<div id="shutdowns0" class="d-block d-md-flex graph-category-block">
+	@if (level == 1)@* By Section *@
+	{
+
+		<div class="col-12 col-md-9">
+			@* Number of Shutdowns *@
+				@if (ChartTypeBar == false)
+				{
+					<MatrixLine SumValues=true
+					TopN=@TopN
+					Interval="@Interval"
+					Title="Number of Shutdowns"
+					Label="Count"
+					events="Summaries_ZoneBreach.Select(s => new MatrixGeneralChartData{
+											Category = s.myMachine.Section.SectionName,
+											value = s.Shutdowns == null ? 0:  (decimal)s.Shutdowns,
+											Date = s.Date, Color= s.myMachine.Section.Color}).ToList()" />
+				}
+				else
+				{
+					<Bar SumValues=true Interval="@Interval"
+					 TopN="@TopN"
+					 Title="Number of Shutdowns"
+					Label="Count"
+					events="Summaries_ZoneBreach.Select(s => new MatrixGeneralChartData{ Category = s.myMachine.Section.SectionName, value = s.Shutdowns == null ? 0:  (decimal)s.Shutdowns, Date = s.Date, Color= s.myMachine.Section.Color}).ToList()" />
+
+				}
+			</div>
+			<div class="col-12 col-md-3">
+				
+					<Pie
+					TopN=@TopN
+					Title="Number of Shutdowns"
+					Label="Count"
+					events="Summaries_ZoneBreach.GroupBy(s =>
+					s.myMachine.Section.SectionName).Select(s => new MatrixPieChartData{
+					Category = s.Key,
+					value=s.Sum(x=>x.Shutdowns),
+					Color = s.FirstOrDefault(x=>x.myMachine.Section.SectionName == s.Key).myMachine.Section.Color
+					}).ToList()" />
+				
+@* 				<div>
+					<MatrixReportTable Title="Number of Shutdowns"
+					Label="Section"
+					tempList="Summaries_ZoneBreach.GroupBy(s =>
+					s.myMachine.Section.SectionName).Select(s => new MatrixTableChartData{
+					Category = s.Key,
+					value=s.Sum(x=>x.Shutdowns)
+					}).ToList()"/>
+
+				</div> *@
+			</div>
+		
+	}
+	else if (level == 2)@* By Machine *@
+	{
+		
+	
+			<div class="col-md-9">
+				@if (ChartTypeBar == false)
+				{
+					<MatrixLine SumValues=true
+								TopN=@TopN
+								Interval="@Interval"
+								Title="Number of Shutdowns"
+								Label="Count"
+								events="Summaries_ZoneBreach.Select(s => new MatrixGeneralChartData{
+										Category = s.myMachine.MachName,
+										Color = s.myMachine.Color,
+										value = s.Shutdowns == null ? 0:  (decimal)s.Shutdowns,
+										Date = s.Date}).ToList()" />
+				}
+				else
+				{
+					<Bar SumValues=true Interval="@Interval"
+						Title="Number of Shutdowns"
+					 TopN="@TopN"
+					 Label="Count"
+					 events="Summaries_ZoneBreach.Select(s => new MatrixGeneralChartData{ Category = s.myMachine.MachName, Color = s.myMachine.Color, value = s.Shutdowns == null ? 0:  (decimal)s.Shutdowns, Date = s.Date}).ToList()" />
+
+				}
+			</div>
+			<div class="col-md-3">
+				
+					<Pie
+						 TopN=@TopN
+						 Title="Number of Shutdowns"
+						 Label="Count"
+						 events="Summaries_ZoneBreach.GroupBy(s =>
+					s.myMachine.MachName).Select(s => new MatrixPieChartData{
+					Category = s.Key,
+					value=s.Sum(x=>x.Shutdowns),
+					Color = s.FirstOrDefault(x=>x.myMachine.MachName == s.Key).myMachine.Color
+						}).ToList()" />
+				
+@* 				<div>
+					<MatrixReportTable Title="Number of Shutdowns"
+									   Label="Section"
+									   tempList="Summaries_ZoneBreach.GroupBy(s =>
+					s.myMachine.MachName).Select(s => new MatrixTableChartData{
+					Category = s.Key,
+					value=s.Sum(x=>x.Shutdowns)
+					}).ToList()"/>
+
+				</div> *@
+			</div>
+		
+
+	}
+</div>
+
+
+@code {
+
+	private PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+	private System.Threading.Timer? timer; // NOTE: THIS LINE OF CODE ADDED
+
+	[Parameter]
+	public List<ZoneBreachSummary>? Summaries_ZoneBreach { get;  set; }
+
+	[Parameter]
+	public List<EventlogReport>? tempMaintenanceModeEvents { get; set; }
+
+	[Parameter]
+	public int? TopN { get; set; }
+
+	[Parameter]
+	public int Interval { get; set; }
+
+	[Parameter]
+	public bool ChartTypeBar { get; set; }
+
+	/// <summary>
+	/// 0 = mines
+	/// 1 = sections
+	/// 2 = machines
+	/// 3 = MNIDs
+	/// </summary>
+	[Parameter]
+	public int level { get; set; }
+
+
+
+}

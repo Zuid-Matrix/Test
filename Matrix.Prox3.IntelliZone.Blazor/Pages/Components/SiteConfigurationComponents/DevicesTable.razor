@@ -1,0 +1,103 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using System.Threading.Tasks
+@using System.Net.Sockets
+@using Microsoft.EntityFrameworkCore
+@inject HttpClient http
+
+<div class="component-headings">Devices</div>
+<hr size="7px" class="mt-0"/>
+<div class="d-flex justify-content-between align-items-center">
+	<div class="ms-2">
+		Items per page:
+		<select @bind="@pagination.ItemsPerPage">
+			<option selected>10</option>
+			<option>20</option>
+			<option>50</option>
+			<option>100</option>
+			<option>200</option>
+		</select>
+	</div>
+
+	<button class="btn btn-outlineprimary" @onclick="@Add">Add new Device</button>
+		
+</div>
+
+		
+	@if(devices != null)
+	{
+		<QuickGrid class="table" Items="devices" Pagination="@pagination">
+			<PropertyColumn Property="@(p => p.IP)" Sortable="true" />
+			<PropertyColumn Property="@(p => p.DeviceType != null ? p.DeviceType.ToString() : "" )" Title="Device Type" Sortable="true" />
+			<PropertyColumn Property="@(p => p.MachineName)" Title="Machine Name" Sortable="true" />
+			<PropertyColumn Property="@(p => p.Section != null ? p.Section.SectionName : "" )" Title="Section" Sortable="true" />
+			<PropertyColumn Property="@(p => p.shiftSeconds)" Title="Shift Duration(sec.)" Sortable="true" />
+			<PropertyColumn Property="@(p => p.maxPeople)" Title="Max Locators here" Sortable="true" />
+			<PropertyColumn Property="@(p => p.allowWrite)" Title="Allow Write" Sortable="true" />
+			<TemplateColumn>
+				<button class="btn btn-light" @onclick="()=>UpdateDevice(context)">Edit</button>
+			</TemplateColumn>
+
+		</QuickGrid>
+	}
+
+
+
+
+	<Paginator State="@pagination" /> 
+		
+
+
+@code {
+
+	[CascadingParameter] public IModalService Modal { get; set; } = default!;
+
+	private MatrixDevice? tempcontroller = new();
+	ModalParameters controllerparams = new();
+	PaginationState pagination = new PaginationState { ItemsPerPage = 100 };
+
+
+
+	IQueryable<MatrixDevice> devices
+	{
+
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<MatrixDevice>>("api/MatrixDevices"));
+				t.Wait();
+				return t.Result.AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+
+		}
+
+	}
+
+
+
+	private async Task UpdateDevice(MatrixDevice device)
+	{
+		ModalParameters controllerparams = new ModalParameters().Add(nameof(DeviceModal.device), device);
+
+		await Modal.Show<DeviceModal>("Edit Device", controllerparams).Result;
+		await InvokeAsync(StateHasChanged);
+	
+	}
+
+
+	private async Task Add()
+	{
+		await Modal.Show<DeviceModal>("New Device", controllerparams).Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+
+
+
+	
+}
+

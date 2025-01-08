@@ -1,0 +1,129 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Matrix.Prox3.IntelliZone.Data.Models.Reporting
+@using Matrix.Prox3.IntelliZone.Data.Models.Colors
+@using Matrix.Prox3.IntelliZone.Data.Models.MatrixChart
+
+@implements IDisposable
+
+
+
+@*     <h6 class="fw-bold text-uppecase">@Label</h6> *@
+    <PolarAreaChart @ref="PolarAreaChart" Width="90" WidthUnit="Unit.Percentage" Class="mb-6 ms-3" />
+   
+
+
+
+@code {
+
+    [Parameter] 
+    public List<MatrixPolarChartData> events { get; set; }
+    [Parameter]
+    public string Label { get; set; }
+    [Parameter]
+    public DateTime DateFrom { get; set; }
+    [Parameter]
+    public DateTime DateTo { get; set; }
+
+    private Calendar cal = new CultureInfo("en-US").Calendar;
+    private PolarAreaChart PolarAreaChart = default!;
+    private PolarAreaChartOptions polarAreaChartOptions = default!;
+    private ChartData chartData = default!;
+    private int MinValue = 10;
+    private int MaxValue = 1000;
+    private List<int> weeks = new();
+    private List<DateTime> days = new();
+    private List<int> months = new();
+    private List<int> years = new();
+    //private int datasetsCount = 0;
+    private int labelsCount = 0;
+
+
+    protected override void OnInitialized()
+    {
+
+        // chartData = new ChartData { Labels = GetDefaultDataLabels(5), Datasets = GetDefaultDataSets(1) };
+        // await GetDataSets();
+
+        polarAreaChartOptions = new();
+        polarAreaChartOptions.Responsive = true;
+        //  polarAreaChartOptions.Plugins.Legend.MaxHeight = 20;
+        polarAreaChartOptions.Plugins.Title!.Text = $"{Label}";
+        polarAreaChartOptions.Plugins.Title.Display = true;
+        // PolarAreaChartOptions.Scales.Y.Title = new ChartAxesTitle { Text = $"Number of {Label}", Display = true };
+    }
+
+
+    // protected override async void OnParamaterSetAsync()
+    // {
+    //    
+    // }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        await GetDataSets();
+
+        if (firstRender)
+        {
+            await PolarAreaChart.InitializeAsync(chartData, polarAreaChartOptions);
+        }
+        await base.OnAfterRenderAsync(firstRender);
+
+    }
+
+    public void Dispose()
+    {
+
+    }
+
+    private async Task GetDataSets()
+    {
+
+
+
+        List<string> labels = new();
+
+        var datasets = new List<IChartDataset>();
+        List<double?> allvalues = new();
+        var datasetsCount = 0;
+        foreach (var item in events.Select(s=>  s.Category).Distinct())
+        {
+            labels.Add(item);
+        }
+
+        
+        foreach (var subcat in events.Select(s=> s.SubCategory).Distinct())
+        {
+            datasetsCount++;
+            if (datasetsCount >= ReportingColors.CustomPalette200.Count())
+            {
+                datasetsCount = 0;
+            }
+            List<double?> data = new();
+            foreach( var label in labels)
+            {
+                data.Add(events.Where(s => s.Category == label && s.SubCategory == subcat).Select(d => (double?)d.value).Sum() / 1000000 / 60);
+            }
+            datasets.Add(new PolarAreaChartDataset()
+                {
+                    Label = subcat,
+                    Data = data
+                });
+        }
+
+
+               
+                
+    
+           
+       
+        chartData = new ChartData { Labels = labels, Datasets = datasets };
+        if (PolarAreaChart != null)
+        {
+            await PolarAreaChart.UpdateAsync(chartData, polarAreaChartOptions);
+        }
+
+    }
+}
+       

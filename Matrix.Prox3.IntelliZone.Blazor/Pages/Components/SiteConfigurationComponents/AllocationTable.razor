@@ -1,0 +1,627 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using System.Threading.Tasks
+@using System.Drawing
+@using System.Data;
+@inject ILogger<AllocationTable> _logger
+@inject IJSRuntime js
+@inject AuthenticationStateProvider _authenticationStateProvider
+
+
+<div class="component-headings">Allocations</div>
+<hr class="mt-0" />
+<div class="d-flex m-2 justify-content-between align-items-center">
+	<div class="me-2">
+		Items per page:
+		<select @bind="@pagination.ItemsPerPage">
+			<option selected>10</option>
+			<option>20</option>
+			<option>50</option>
+			<option>100</option>
+			<option>200</option>
+		</select>
+		<input type="checkbox" @bind="onlyNonAlloc" /> Only Show Non-Allocated
+	</div>
+				
+<div>
+	@* <Button Class="btn-outline-primary m-2" @onclick="@AddEmployee">Add new Employee</Button> *@
+<button class="btn btn-outlineprimary" @onclick="@AddChargingPoint">Add new ChargingPoint</button>
+					</div>
+					
+				</div>
+		@* 		@if (_allocationFactory.CreateDbContext().ChargingPoints.Any())
+				{
+					
+					<QuickGrid class="table-bordered" Items="temp" Pagination="@pagination">
+						<PropertyColumn Property="@(p => p.PointName)" Title="Rack Name" Sortable="true" />
+						<PropertyColumn Property="@(p => p.PointNumber != null ? p.PointNumber : 0)" Title="Rack Number" Sortable="true" />
+						<TemplateColumn Title="Employee">
+							@using (ProxLocalConnectionContext _allocationContext = _allocationFactory.CreateDbContext())
+							{
+
+								var alloclist = _allocationContext.Allocations.Include(s => s.ChargingPoint).Include(s => s.Locator).Include(s => s.Employee).Where(s => s.endDate == null).ToList();
+								var tempaallocation = _allocationContext.Allocations.Include(s => s.ChargingPoint).Include(s => s.Locator).Include(s => s.Employee).Where(s => s.ChargingPoint.PointName == context.PointName && s.endDate == null).FirstOrDefault();
+							var lastAllocation = _allocationContext.Allocations.Include(s => s.ChargingPoint).Include(s => s.Locator).Include(s => s.Employee).Where(s => s.ChargingPoint.PointName == context.PointName).OrderBy(s => s.AllocationDate).LastOrDefault();
+								<select @onchange="(value) => updateEmployee(tempaallocation != null? tempaallocation.Id : lastAllocation != null ? lastAllocation.Id : 0 , value)">
+									@if (tempaallocation != null)
+									{
+
+										@if (tempaallocation.Employee != null)
+										{
+											<option selected value="@tempaallocation.Employee.EmployeeCode">@tempaallocation.Employee.Initials @tempaallocation.Employee.Surname (@tempaallocation.Employee.EmployeeCode)   </option>
+
+
+											@if (onlyNonAlloc)
+											{
+												@foreach (var empl in _allocationContext.Employees.ToList().Except(alloclist.Select(s => s.Employee)))
+												{
+													<option value="@empl.EmployeeCode">@empl.Initials @empl.Surname (@empl.EmployeeCode)</option>
+												}
+
+											}
+											else
+											{
+												@foreach (var empl in _allocationContext.Employees.ToList())
+												{
+													<option value="@empl.EmployeeCode">@empl.Initials @empl.Surname (@empl.EmployeeCode)</option>
+												}
+											}
+											
+										}
+										else
+										{
+											<option selected value="@addNewStr">@addNewStr</option>
+											@if (onlyNonAlloc)
+											{
+												@foreach (var empl in _allocationContext.Employees.ToList().Except(alloclist.Select(s => s.Employee)))
+												{
+													<option value="@empl.EmployeeCode"> @empl.Initials @empl.Surname (@empl.EmployeeCode)</option>
+												}
+
+											}
+											else
+											{
+												@foreach (var empl in _allocationContext.Employees.ToList())
+												{
+													<option value="@empl.EmployeeCode">@empl.Initials @empl.Surname (@empl.EmployeeCode)</option>
+												}
+											}
+										}
+
+									}
+									else
+									{
+										@if (onlyNonAlloc)
+										{
+											<option selected> </option>
+											@foreach (var empl in _allocationContext.Employees.ToList().Except(alloclist.Select(s => s.Employee)))
+											{
+												<option value="@empl.EmployeeCode">@empl.Initials @empl.Surname (@empl.EmployeeCode)</option>
+											}
+
+										}
+										else
+										{
+											<option selected></option>
+											@foreach (var empl in _allocationContext.Employees.ToList())
+											{
+												<option value="@empl.EmployeeCode">@empl.Initials @empl.Surname (@empl.EmployeeCode)</option>
+											}
+										}
+									
+									}
+								</select>
+							}
+						</TemplateColumn>
+						<TemplateColumn Title="MNID">
+							@using (ProxLocalConnectionContext _allocationContext = _allocationFactory.CreateDbContext())
+							{
+						
+								var alloclist = _allocationContext.Allocations.Where(s => s.endDate == null).ToList();
+								var tempaallocations = _allocationContext.Allocations.Include(s => s.ChargingPoint).Include(s => s.Locator).Include(s => s.Employee).Where(s => s.ChargingPoint.PointName == context.PointName && s.endDate == null);
+								
+								if (tempaallocations.Any())
+								{
+									var lastAllcationifnotnull = _allocationContext.Allocations.Include(s => s.ChargingPoint).Include(s => s.Locator).Include(s => s.Employee).Where(s => s.ChargingPoint.PointName == context.PointName).AsNoTracking().OrderBy(s => s.AllocationDate).Last();
+					var lastAllcation = tempaallocations.OrderBy(s => s.AllocationDate).Last();
+									<select class="" @onchange="(value) => updateMNID(lastAllcation.Id, value)">
+										@if (lastAllcation.Locator != null)
+										{
+											<option selected value="@lastAllcation.Locator">@lastAllcation.Locator.MNID </option>
+										}
+										else
+										{
+											<option selected></option>
+										}
+
+										@if (onlyNonAlloc && _allocationContext.Locators.Any())
+										{
+
+											@foreach (var mnid in _allocationContext.Locators.ToList().Except(alloclist.Select(s => s.Locator)))
+											{
+												<option value="@mnid.decMNID">@mnid.MNID</option>
+											}
+										}
+										else
+										{
+											@foreach (var mnid in _allocationContext.Locators.ToList())
+											{
+												<option value="@mnid.decMNID">@mnid.MNID</option>
+											}
+										}
+
+									</select>
+								}
+
+
+							}
+						</TemplateColumn>
+						<TemplateColumn>
+							<Button Class="btn-outline-danger" @onclick="()=>RemoveEmployeeFromPoint(context)">Remove Employee</Button>
+							<Button Class="btn-outline-danger" @onclick="()=>RemoveLocatorFromPoint(context)">Clear Locator</Button>
+						</TemplateColumn>
+
+					</QuickGrid>
+				<Paginator State="@pagination" /> 
+				}*@
+
+	
+<CascadingAuthenticationState>
+</CascadingAuthenticationState>
+
+
+@code {
+
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+	PaginationState pagination = new PaginationState { ItemsPerPage = 5 };
+	private Employee? employee;
+	private bool busy = false;
+	private bool onlyNonAlloc = true;
+	private string addNewStr = "+";
+	string nameFilter;
+	string user = "";
+	public void Dispose()
+	{
+
+		// if (_allocationContext != null) _allocationContext.Dispose();
+		//if (_employeeContext != null) _employeeContext.Dispose();
+
+	}
+
+
+	// IQueryable<ChargingPoint> temp
+	// {
+	// 	// get
+	// 	// {
+
+	// 	// 	var result = _allocationFactory.CreateDbContext().ChargingPoints.ToList().AsQueryable();
+
+	// 	// 	if (!string.IsNullOrEmpty(nameFilter))
+	// 	// 	{
+	// 	// 		//result = result.Where(c => c.Name.Contains(nameFilter, StringComparison.CurrentCultureIgnoreCase));
+	// 	// 	}
+
+
+
+	// 	// 	return result;
+	// 	// }
+	// }
+
+	private async void updateMNID(long currentAllocationID, ChangeEventArgs b)
+	{
+		// using (var _allocationContext = await _allocationFactory.CreateDbContextAsync())
+		// {
+
+		// 	var currentAllocation = await _allocationContext.Allocations.FindAsync(currentAllocationID);
+		// 	var locator = await  _allocationContext.Locators.FindAsync(Convert.ToUInt32(b.Value));
+		// 	var point = _allocationContext.ChargingPoints.ToList();
+		// 	var Locators = _allocationContext.Locators.ToList();
+		// 	var employees = _allocationContext.Employees.ToList();
+		// 	var previousallocs = _allocationContext.Allocations.ToList().Where(s => s.Locator == locator && s.endDate == null).OrderBy(s => s.AllocationDate);
+		// 	if (previousallocs.Any())
+		// 	{
+
+		// 		foreach (Allocation aloc in previousallocs)
+		// 		{
+		// 			var update =await  _allocationContext.Allocations.FindAsync(aloc.Id);
+		// 			update.endDate = DateTime.Now;
+		// 			_allocationContext.Update(update);
+		// 			//Add allocation for Point/MNID where employee = null sp that MNID is still allocated to charging rack ////THIS SHOULD ONLY COME INTO PLAY IF EMPLOYEE IS MOVED
+
+		// 			Allocation replace = new()
+		// 				{
+		// 					ChargingPoint = update.ChargingPoint,
+		// 					Locator = null,
+		// 					Employee =update.Employee,
+		// 					AllocatedBy = "replacement_for_chargingpoint_NULL MNID",
+		// 					AllocationDate = DateTime.Now
+		// 				};
+		// 			_allocationContext.Add(replace);
+		// 		}
+		// 	}
+
+		// 	////set the current allocation's end date to null
+		// 	currentAllocation.endDate = DateTime.Now;
+		// 	_allocationContext.Update(currentAllocation);
+
+		// 	Allocation temp = new()
+		// 		{
+		// 			ChargingPoint = currentAllocation == null ? await _allocationContext.ChargingPoints.FindAsync(b.Value) : currentAllocation.ChargingPoint,
+		// 			Locator = locator,
+		// 			Employee = currentAllocation.Employee,
+		// 			AllocatedBy = "New_MNID_employee",
+		// 			AllocationDate = DateTime.Now
+		// 		};
+
+		// 	_allocationContext.Add(temp);
+		// 	try
+		// 	{
+		// 		await _allocationContext.SaveChangesAsync();
+		// 	}
+
+		// 	catch (InvalidOperationException invE)
+		// 	{
+		// 		_logger.LogError(invE.ToString());
+		// 	}
+		// 	catch (Exception exc)
+		// 	{
+		// 		_logger.LogError(exc.ToString());
+
+		// 	}
+		
+		// 	await InvokeAsync(StateHasChanged);
+		// }
+	}
+
+	private async void EnsureAllocationForEachChargingPoint(long currentAllocationID)
+	{
+		// foreach (var point in _allocationContext.ChargingPoints)
+		// {
+		// 	var allocations = 
+		// }
+	}
+
+	// private async Task CreateNewEmployee(long? currentAllocationID)
+	// {
+	// 	using (var _allocationContext = await _allocationFactory.CreateDbContextAsync())
+	// 	{
+	// 		var tempsft = _allocationContext.Allocations.ToList();
+	// 		var tempsfte = _allocationContext.Employees.ToList();
+	// 		var tempsft3 = _allocationContext.Locators.ToList();
+	// 		var tempsft4 = _allocationContext.ChargingPoints.ToList();
+
+
+
+	// 		while (popupEmp.IsVisible)
+	// 		{
+	// 			await Task.Delay(100);
+	// 		}
+	// 		if (popupEmp.Save)
+	// 		{
+	// 			_allocationContext.Employees.Add(popupEmp.employee);
+
+	// 			///Only remove previous allocation if user clicks save and added from dropdown
+	// 			if (currentAllocationID != null)
+	// 			{
+	// 				var currentAllocation = _allocationContext.Allocations.Find(currentAllocationID);
+	// 				currentAllocation.endDate = DateTime.Now;
+	// 				_allocationContext.Update(currentAllocation);
+
+	// 				Allocation temp = new()
+	// 				{
+	// 					ChargingPoint = currentAllocation.ChargingPoint,
+	// 					Locator = currentAllocation.Locator,
+	// 					Employee = popupEmp.employee,
+	// 					AllocatedBy = "AddNewEmployee",
+	// 					AllocationDate = DateTime.Now
+	// 				};
+	// 				_allocationContext.Add(temp);
+	// 			}
+	// 			else
+	// 			{
+	// 				_allocationContext.Employees.Add(popupEmp.employee);
+
+	// 			}
+	// 			popupEmp.employee = new();
+	// 			popupEmp.Save = false;
+
+	// 			await _allocationContext.SaveChangesAsync();
+
+	// 		}
+	// 	}
+	// }
+	private async Task AddEmployee()
+	{
+		await ModalService.Show<EmployeeModal>("New Employee").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task AddChargingPoint()
+	{
+		await ModalService.Show<ChargingPointModal>("New Charging Point").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async void updateEmployee(long currentAllocationID, ChangeEventArgs b)
+	{
+		busy = true;
+		StateHasChanged();
+		//// Steps to update:
+		///End all previous allocations for employee 
+		///Add new allocation
+
+
+		if (Convert.ToString(b.Value).Contains(addNewStr))
+		{
+			// await CreateNewEmployee(currentAllocationID);
+		}
+		else
+		{
+			// using (var _allocationContext = await _allocationFactory.CreateDbContextAsync())
+			// {
+			// 	var currentAllocation = await _allocationContext.Allocations.FindAsync(currentAllocationID);
+			// 	var temp = _allocationContext.Allocations.ToList();
+			// 	///see if Employee has any previous allocations
+			// 	///// then set those allocations's end-date to now
+			// 	////// then add the new allocation
+			// 	var employee = await _allocationContext.Employees.FindAsync(b.Value);
+			// 	var point = _allocationContext.ChargingPoints.ToList();
+			// 	var Locators = _allocationContext.Locators.ToList();
+			// 	var oldEMPallocs = _allocationContext.Allocations.ToList().Where(s => s.Employee == employee && s.endDate == null).OrderBy(s => s.AllocationDate);
+			// 	if (oldEMPallocs.Any())
+			// 	{
+
+			// 		foreach (var aloc in oldEMPallocs.Select(s => s.Id))
+			// 		{
+			// 			var update = await _allocationContext.Allocations.FindAsync(aloc);
+			// 			if (update != null)
+			// 			{
+			// 				update.endDate = DateTime.Now;
+			// 				_allocationContext.Update(update);
+
+			// 			}
+
+			// 			//Add an allocation for Point/MNID where employee = null sp that MNID is still allocated to charging rack ////THIS SHOULD ONLY COME INTO PLAY IF EMPLOYEE IS MOVED
+			// 			Allocation replace = new()
+			// 				{
+			// 					ChargingPoint = update.ChargingPoint,
+			// 					Locator = update.Locator,
+			// 					Employee = null,
+			// 					AllocatedBy = "replacement_for_chargingpoint_NULL EMP",
+			// 					AllocationDate = DateTime.Now
+			// 				};
+			// 			_allocationContext.Add(replace);
+
+			// 		}
+			// 		try
+			// 		{
+			// 			await _allocationContext.SaveChangesAsync();
+			// 		}
+
+			// 		catch (InvalidOperationException invE)
+			// 		{
+			// 			_logger.LogError(invE.ToString());
+			// 		}
+			// 		catch (Exception exc)
+			// 		{
+			// 			_logger.LogError(exc.ToString());
+
+			// 		}
+					
+			// 	}
+
+			// 	////set the current allocation's end date to null
+			// 	////// Then add a new allocation for that charging point
+			// 	if(currentAllocation != null)
+			// 	{
+			// 		currentAllocation.endDate = DateTime.Now;
+			// 		_allocationContext.UpdateRange(currentAllocation);
+			// 	}
+
+
+			// 	Allocation newAlloc = new()
+			// 	{
+			// 			ChargingPoint = currentAllocation == null ? await _allocationContext.ChargingPoints.FindAsync(b.Value) : currentAllocation.ChargingPoint,
+			// 			Locator = currentAllocation != null && currentAllocation.Locator != null ? currentAllocation.Locator : null,
+			// 		Employee = employee,
+			// 		AllocatedBy = "New_allocaion_employee",
+			// 		AllocationDate = DateTime.Now
+			// 	};
+
+			// 	_allocationContext.Add(newAlloc);
+			// 	try
+			// 	{
+			// 		await _allocationContext.SaveChangesAsync();
+			// 	}
+
+			// 	catch (InvalidOperationException invE)
+			// 	{
+			// 		_logger.LogError(invE.ToString());
+			// 	}
+			// 	catch (Exception exc)
+			// 	{
+			// 		_logger.LogError(exc.ToString());
+
+			// 	}
+			
+			// }
+		}
+		busy = false;
+		await InvokeAsync(this.StateHasChanged);
+
+
+		////var response =  await Http.PostAsJsonAsync<MatrixDevice>($"{VolatileStorage.apiprimaryroute}/api/MatrixDevices",  ControllerToEdit);
+
+
+	}
+
+	private async void RemoveLocatorFromPoint(ChargingPoint currentPoint)
+	{
+		ModalParameters message = new ModalParameters().Add(nameof(ConfirmationModal.Message), "Are you sure you want to remove locator from this charging point?");
+
+		var result = await ModalService.Show<ConfirmationModal>("Confirm?", message).Result;
+		if (result.Confirmed)
+		{
+			Allocation? lastAllocation;
+			// using (var _ctx = await _allocationFactory.CreateDbContextAsync())
+			// {
+			// 	//Set current allocation's end date
+			// 	var allocations = _ctx.Allocations.Where(s => s.ChargingPoint.PointName == currentPoint.PointName).Include(s => s.ChargingPoint).Include(s => s.Locator).Include(s => s.Employee).AsNoTracking();
+			// 	if (allocations.Any())
+			// 	{
+			// 		foreach (var allocation in allocations)
+			// 		{
+			// 			allocation.endDate = DateTime.Now;
+			// 			_ctx.Allocations.Update(allocation);
+			// 		}
+
+			// 		try
+			// 		{
+			// 			await _ctx.SaveChangesAsync();
+			// 		}
+
+			// 		catch (InvalidOperationException invE)
+			// 		{
+			// 			_logger.LogError(invE.ToString());
+			// 		}
+			// 		catch (Exception exc)
+			// 		{
+			// 			_logger.LogError(exc.ToString());
+
+			// 		}
+			// 	}
+
+
+			// 	lastAllocation = allocations.OrderBy(s => s.AllocationDate).Last();
+
+
+			// 	var temp22 = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Claims.FirstOrDefault(s => s.Type.Contains("emailaddres"));
+			// 	//Create new allocation without Employee
+			// 	Allocation temp = new()
+			// 		{
+			// 			AllocatedBy = temp22 != null ? temp22.Value : "Unknown",
+			// 			AllocationDate = DateTime.Now,
+			// 			ChargingPoint = await _ctx.ChargingPoints.FindAsync(lastAllocation.ChargingPoint.PointName),
+			// 			Employee = lastAllocation.Employee != null ?  await _ctx.Employees.FindAsync(lastAllocation.Employee.EmployeeCode) : null,
+			// 			Locator =  null
+
+			// 		};
+			// 	_ctx.Add(temp);
+			// 	try
+			// 	{
+			// 		await _ctx.SaveChangesAsync();
+			// 	}
+
+			// 	catch (InvalidOperationException invE)
+			// 	{
+			// 		_logger.LogError(invE.ToString());
+			// 	}
+			// 	catch (Exception exc)
+			// 	{
+			// 		_logger.LogError(exc.ToString());
+
+			// 	}
+				
+			// }
+		}
+		await InvokeAsync(StateHasChanged);
+
+	}
+
+	private async void RemoveEmployeeFromPoint(ChargingPoint currentPoint)
+	{
+
+		ModalParameters message = new ModalParameters().Add(nameof(ConfirmationModal.Message), "Are you sure you want to remove employee from this charging point?");
+
+		var result = await ModalService.Show<ConfirmationModal>("Confirm?",message).Result;
+		if (result.Confirmed)
+		{
+			Allocation? lastAllocation;
+			// using (var _ctx = await _allocationFactory.CreateDbContextAsync())
+			// {
+			// 	//Set current allocation's end date
+			// 	var allocations = _ctx.Allocations.Where(s => s.ChargingPoint.PointName == currentPoint.PointName).Include(s => s.ChargingPoint).Include(s => s.Locator).Include(s => s.Employee).AsNoTracking();
+			// 	if (allocations.Any())
+			// 	{
+			// 		foreach (var allocation in allocations)
+			// 		{
+			// 			allocation.endDate = DateTime.Now;
+			// 			_ctx.Allocations.Update(allocation);
+			// 		}
+			// 		try
+			// 		{
+			// 			await _ctx.SaveChangesAsync();
+			// 		}
+
+			// 		catch (InvalidOperationException invE)
+			// 		{
+			// 			_logger.LogError(invE.ToString());
+			// 		}
+			// 		catch (Exception exc)
+			// 		{
+			// 			_logger.LogError(exc.ToString());
+
+			// 		}
+			
+			// 	}
+				
+
+			// 	lastAllocation = allocations.OrderBy(s => s.AllocationDate).Last();
+			
+
+			// 	var temp22 = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Claims.FirstOrDefault(s => s.Type.Contains("emailaddres"));
+			// //Create new allocation without Employee
+			// 	Allocation temp = new()
+			// 	{
+			// 		AllocatedBy = temp22 != null ? temp22.Value : "Unknown",
+			// 		AllocationDate = DateTime.Now,
+			// 		ChargingPoint = await _ctx.ChargingPoints.FindAsync( lastAllocation.ChargingPoint.PointName),
+			// 		Employee = null,
+			// 		Locator = lastAllocation.Locator != null ? await _ctx.Locators.FindAsync( lastAllocation.Locator.decMNID) : null
+
+			// 	};
+			// 	_ctx.Add(temp);
+			// 	try
+			// 	{
+			// 		await _ctx.SaveChangesAsync();
+			// 	}
+
+			// 	catch (InvalidOperationException invE)
+			// 	{
+			// 		_logger.LogError(invE.ToString());
+			// 	}
+			// 	catch (Exception exc)
+			// 	{
+			// 		_logger.LogError(exc.ToString());
+
+			// 	}
+			
+			// }
+		}
+			await InvokeAsync(StateHasChanged);
+		
+
+	}
+	// private async void DeleteEmployee(Employee employeetoDelete)
+	// {
+	// 	////var response =  await Http.PostAsJsonAsync<MatrixDevice>($"{VolatileStorage.apiprimaryroute}/api/MatrixDevices",  ControllerToEdit);
+
+	// 	popupPass.Show("Password Required to delete employee:");
+	// 	///Verify Password from API
+	// 	///
+	// 	while (popupPass.IsVisible)
+	// 	{
+	// 		await Task.Delay(100);
+	// 	}
+	// 	if (_password.verifyPassword(popupPass.username, popupPass.Password, 1))
+	// 	{
+	// 	//	_employeeContext = await _employeecontextfactory.CreateDbContextAsync();
+	// 	//	_employeeContext.Employees.Remove(employeetoDelete);
+	// 	//	await _employeeContext.SaveChangesAsync();
+	// 	}
+	// 	popupPass.Password = string.Empty;
+	// 	popupPass.username = string.Empty;
+	// }
+
+	
+
+}

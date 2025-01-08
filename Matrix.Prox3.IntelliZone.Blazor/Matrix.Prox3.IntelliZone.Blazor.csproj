@@ -1,0 +1,65 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>Matrix_Favicon.ico</ApplicationIcon>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Platforms>AnyCPU;x64</Platforms>
+    <UserSecretsId>3c08d3aa-965d-4df6-a026-a63d9a6a04b4</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="logs\**" />
+    <Compile Remove="ProxLogPackages\**" />
+    <Content Remove="logs\**" />
+    <Content Remove="ProxLogPackages\**" />
+    <EmbeddedResource Remove="logs\**" />
+    <EmbeddedResource Remove="ProxLogPackages\**" />
+    <None Remove="logs\**" />
+    <None Remove="ProxLogPackages\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazor.Bootstrap" Version="3.2.0" />
+    <PackageReference Include="Blazored.Modal" Version="7.3.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid.EntityFrameworkAdapter" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
+    <PackageReference Include="MudBlazor" Version="7.15.0" />
+    <PackageReference Include="Matrix.Authentication.Client" Version="1.0.3.3" />
+    <PackageReference Include="Plotly.Blazor" Version="5.3.0" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Matrix.Prox3.IntelliZone.Data\Matrix.Prox3.IntelliZone.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="IntelliZoneReporting.Common">
+      <HintPath>..\IntelliZoneReporting.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Matrix.Prox3.Connection">
+      <HintPath>..\Matrix.Prox3.IntelliZone.Data\Libraries\Matrix.Prox3.Connection.dll</HintPath>
+    </Reference>
+    <Reference Include="Matrix.Prox3.Proxtalk">
+      <HintPath>..\Matrix.Prox3.IntelliZone.Data\Libraries\Matrix.Prox3.Proxtalk.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Pages\Components\ReportComponents\ReportPages\StaticReports.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\js\chartjs\" />
+  </ItemGroup>
+
+</Project>

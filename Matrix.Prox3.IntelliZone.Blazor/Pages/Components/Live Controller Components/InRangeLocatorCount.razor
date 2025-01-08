@@ -1,0 +1,54 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Microsoft.EntityFrameworkCore
+@using System.Threading.Tasks
+@using System.Drawing
+@using System.Data;
+
+
+
+
+
+@if (ControllerReports.Any())
+{
+	foreach (var device in ControllerReports.Where(s =>s.maxPeople != null))
+	{
+		
+		if (device.ActiveLocators.Any() && device.ConnectionInfo == true)
+		{
+			if (device.ActiveLocators.Where(s => s.locatorProximityState == LocatorProximityState.AtMachine && s.LocatorType != LocatorType.LOCATOR_TYPE_MML).Count() >= device.maxPeople)
+			{
+				<p style="font-size:400px;background-Color:red;align-content:center;padding:1px;text-align:center;Color:aliceblue;opacity:50;border-radius:50px">@(device.ActiveLocators.Where(s => s.locatorProximityState == LocatorProximityState.AtMachine && s.LocatorType != LocatorType.LOCATOR_TYPE_MML).Count())</p>
+			}
+			else if (device.ActiveLocators.Where(s => s.locatorProximityState == LocatorProximityState.AtMachine && s.LocatorType != LocatorType.LOCATOR_TYPE_MML).Count() >= device.maxPeople * 0.8)
+			{
+				<p style="font-size:400px;background-Color:darkorange;align-content:center;padding:1px;text-align:center;border-radius:50px">@device.ActiveLocators.Where(s => s.locatorProximityState == LocatorProximityState.AtMachine && s.LocatorType != LocatorType.LOCATOR_TYPE_MML).Count()</p>
+			}
+			else if (device.ActiveLocators.Where(s => s.locatorProximityState == LocatorProximityState.AtMachine && s.LocatorType != LocatorType.LOCATOR_TYPE_MML).Count() >= 0)
+			{
+				<p style="font-size:400px;background-Color:lawngreen;align-content:center;padding:1px;text-align:center;border-radius:50px">@device.ActiveLocators.Where(s => s.locatorProximityState == LocatorProximityState.AtMachine && s.LocatorType != LocatorType.LOCATOR_TYPE_MML).Count()</p>
+			}
+
+		}
+		else
+		{
+			<p style="font-size:250px;background-Color:gray;align-content:center;padding:1px;text-align:center;Color:aliceblue;opacity:50;border-radius:50px">Disconnected</p>
+		}
+	}
+
+}
+
+	
+
+
+
+
+
+
+	
+
+@code {
+
+
+	[Parameter]
+	public List<BlazorControllerReport> ControllerReports { get; set; }
+}

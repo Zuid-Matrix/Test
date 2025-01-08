@@ -1,0 +1,198 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Matrix.Prox3.IntelliZone.Data.Reporting
+@using Matrix.Prox3.IntelliZone.Data.VolatileStorage
+@using System.Security.Claims
+@using System.Web
+@inject ILogger<UploadDataModal> _logger
+@inject HttpClient http
+
+<CascadingAuthenticationState>
+    <AuthorizeView >
+        <Authorized>
+		
+   </Authorized>
+	</AuthorizeView>
+</CascadingAuthenticationState>
+<body class="w-100 m-0">
+
+
+ 
+<div class="d-flex mb-1 justify-content-between">
+
+	<div class="fw-bolder col-6">Mine:</div>
+	@if (mines != null)
+	{
+	<InputSelect class="form-select" @bind-Value="@tempMine.MineName">
+		<option selected value="@tempMine.MineName">@tempMine.MineName</option>
+
+			@foreach (var option in mines)
+			{
+				<option value="@option.MineName"> @option.MineName</option>
+			}
+				
+	</InputSelect>
+	}
+	<CascadingAuthenticationState>
+	<AuthorizeView>
+		<Authorized>
+			<Button Type="ButtonType.Submit" Active=false class="btn-outline-success" @onclick="AddMine">New..</Button>
+			@if (context.User.Claims.Where(s => s.Type == ClaimTypes.Email).Any())
+			{
+				uplodadedby  = context.User.Claims.Where(s => s.Type == ClaimTypes.Email).Select(s => s.Value).First().Split('@').First();
+			}
+		</Authorized>	
+	</AuthorizeView>
+</CascadingAuthenticationState>
+
+</div>
+
+		@if (tempMine.MineName != null)
+		{
+				<div class="d-flex mb-1 justify-content-between">
+				<div class="fw-bolder col-6">Section:</div>
+					<InputSelect class="form-select" @bind-Value="tempSection.SectionId">
+					<option selected value="@tempSection.SectionId">@tempSection.SectionName</option>
+
+
+						@foreach (var option in sections.Where(s => s.Mine.MineName == tempMine.MineName))
+						{
+								<option value="@option.SectionId"> @option.SectionName</option>
+						}
+					
+				</InputSelect>
+				 <CascadingAuthenticationState> 
+					<AuthorizeView>
+					<Authorized>
+				<Button Type="ButtonType.Submit" Active=false class="btn-outline-success" @onclick="@AddSection">New..</Button>
+				</Authorized>
+			</AuthorizeView>	
+		 </CascadingAuthenticationState> 
+	
+		</div>
+	}
+	
+	@if ( tempSection.SectionId != 0)
+	{
+		<InputFile class="p-2" OnChange="@EvaluateDataAndLoadEVFiles" multiple />
+	}
+
+</body>
+
+	
+
+
+
+@code {
+
+	[CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+	[CascadingParameter] Task<AuthenticationState> AuthenticationStateTask { get; set; } 
+
+	public Section? tempSection = new();
+	public Mine tempMine = new();
+	public string uplodadedby = "";
+
+	IQueryable<Section>? sections
+	{
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<Section>>("api/Sections"));
+				t.Wait();
+				return t.Result.AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+		}
+	}
+
+
+	IQueryable<Mine>? mines
+	{
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<Mine>>("api/Mine"));
+				t.Wait();
+				return t.Result.AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+		}
+	}
+
+	private async Task Close() => await BlazoredModal.CloseAsync();
+
+	private async Task AddSection()
+	{
+		await ModalService.Show<SectionModal>("New Section").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+
+	private async Task AddMine()
+	{
+		await ModalService.Show<MineModal>("New Mine").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task EvaluateDataAndLoadEVFiles(InputFileChangeEventArgs e)
+	{
+
+		string results = "";
+		await InvokeAsync(() => StateHasChanged());
+
+		foreach (var file in e.GetMultipleFiles(200))
+		{
+			MemoryStream memoryStream = new();
+			await file.OpenReadStream(maxAllowedSize: 9999999999).CopyToAsync(memoryStream);
+			memoryStream.Position = 0;
+			await Task.Run(async () =>
+			{
+				//HttpContent content = new StreamContent(memoryStream);
+				HttpContent content = new StreamContent((System.IO.Stream)memoryStream);
+				MatrixFile MatrixFile = new();
+				MatrixFile.FileName = file.Name;
+				MatrixFile.FileContent = memoryStream.ToArray();
+				MatrixFile.Section = sections.FirstOrDefault(s => s.SectionId == tempSection.SectionId);
+				MatrixFile.site = ReportStorage.SiteID.ToString();
+				MatrixFile.userName = uplodadedby;
+
+				var result = await  http.PostAsJsonAsync<MatrixFile>($"api/File", MatrixFile);
+				if (result.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation($"Uploaded file: {file.Name}");
+                    results += $"{file.Name.Replace(".proxlogpkg", "")} - {result.Content.ReadAsStringAsync().Result}\n";
+                }
+                else
+                {
+                    _logger.LogError($"Failed to upload file: {file.Name}");
+                    results += $"{file.Name.Replace(".proxlogpkg", "")} -{result.StatusCode} - {result.ReasonPhrase} - {result.Content.ReadAsStringAsync().Result}\n";
+                }
+			});
+
+		}
+
+		ModalParameters message = new ModalParameters().Add(nameof(PopupMessage.BodyText), results);
+		var options = new ModalOptions()
+		{
+			Size = Blazored.Modal.ModalSize.Large
+		};
+
+
+		ModalService.Show<PopupMessage>("Info", message,options);
+		tempMine = new();
+		tempSection = new();
+		await Close();
+		
+	}
+
+
+
+}

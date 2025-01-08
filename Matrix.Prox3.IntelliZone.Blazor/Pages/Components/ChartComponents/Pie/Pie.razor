@@ -1,0 +1,171 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Matrix.Prox3.IntelliZone.Data.Models.Reporting
+@using Matrix.Prox3.IntelliZone.Data.Models.Colors
+@using Matrix.Prox3.IntelliZone.Data.Models.MatrixChart
+
+@implements IDisposable
+
+
+<div id="chartBodyLine" class=" overflow-x-auto chart-container">
+    @* <h6 class="fw-bold text-uppecase">@Label</h6> *@
+    @if (busy == true || !events.Any())
+    {
+        <NoData />
+
+
+    }
+    <PieChart @ref="Chart" Height="50" HeightUnit="Unit.Percentage" Width="90" WidthUnit="Unit.Percentage" Class="mb-6 ms-3"  />
+   
+</div>
+
+
+@code {
+
+    [Parameter]
+    public List<MatrixPieChartData> events { get; set; }
+
+    [Parameter]
+    public string Label { get; set; }
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public List<Section> Sections { get; set; }
+
+
+    [Parameter]
+    public int? TopN { get; set; }
+    private bool busy = false;
+
+    private int _borderwidth = 2;
+    private Calendar cal = new CultureInfo("en-US").Calendar;
+    private PieChart Chart = default!;
+    private PieChartOptions ChartOptions = default!;
+    private ChartData chartData = default!;
+    private int MinValue = 10;
+    private int MaxValue = 1000;
+    private List<int> weeks = new();
+    private List<DateTime> days = new();
+    private List<int> months = new();
+    private List<int> years = new();
+    //private int datasetsCount = 0;
+    private int labelsCount = 0;
+
+
+    protected override  void OnInitialized()
+    {     
+        ChartOptions = new PieChartOptions () { Responsive = true };
+        ChartOptions.Plugins.Title.Text = Title;
+        ChartOptions.Plugins.Title.Display = true;
+        ChartOptions.Plugins.Legend.Display = false;
+    }
+
+
+    // protected override async void OnParamaterSetAsync()
+    // {
+    //    
+    // }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            if (events.Any())
+            {
+                busy = true;
+                await InvokeAsync(StateHasChanged);
+                await GetDataSets();
+
+                await Chart.InitializeAsync(chartData, ChartOptions);
+                busy = false;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        if (Chart != null)
+        {
+
+            try
+            {
+                await Chart.UpdateAsync(chartData, ChartOptions);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+        }
+        busy = false;
+        await base.OnAfterRenderAsync(firstRender);
+
+    }
+
+    public void Dispose()
+    {
+
+    }
+
+    List<double?>? CreateDataset(decimal? data)
+    {
+        List<double?>? temp = new();
+
+        temp.Add(Convert.ToDouble(data));
+
+        return temp;
+    }
+
+    private async Task GetDataSets()
+    {
+
+
+        List<ChartIndex> chartindexes = new();
+        var datasets = new List<IChartDataset>();
+        List<(string, double?, string)> allvalvalues = new();
+
+        // foreach (var index in events.Select(s => s.Category).Distinct().Order().ToList())
+        // {
+
+        //     allvalvalues.Add(new(index, Convert.ToDouble(events.Where(s => s.Category == index).Select(s => s.value).Sum()), events.FirstOrDefault(s => s.Category == index).Color != null ? events.FirstOrDefault(s => s.Category == index).Color : ReportingColors.CustomPalette200.ToList()[datasetsCount].ToString()));
+
+
+        // }
+        var datasetsCount = 0;
+        foreach (var item in events)
+        {
+            if (item.Color == null)
+            {
+                item.Color = ReportingColors.CustomPalette200.ToList()[datasetsCount].ToString();
+                datasetsCount++;
+            }
+        }
+
+        var tempDataset =  new PieChartDataset()
+            {
+                Label = $"{Title}",
+                // Data = item.data.First().index.date == null ? item.data.OrderBy(s => s.index.no).Select(s => s.value).ToList() : item.data.OrderBy(s => s.index.date).Select(s => s.value).ToList(),
+                Data = events.Select(s => s.value).ToList(),
+                BackgroundColor = events.Select(s => s.Color).ToList(),
+
+            };
+        tempDataset.Datalabels.Anchor = Anchor.Center;
+        datasets.Add(tempDataset);
+        chartData = new ChartData { Labels = events.Select(s => s.Category).ToList(), Datasets = datasets };
+
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (events.Any())
+        {
+            busy = true;
+            await InvokeAsync(StateHasChanged);
+            await GetDataSets();
+
+            busy = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+} 

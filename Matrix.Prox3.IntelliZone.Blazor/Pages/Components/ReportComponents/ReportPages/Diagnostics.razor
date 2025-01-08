@@ -1,0 +1,222 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using System.IO.Compression
+@using System.Threading.Tasks
+@using System.Globalization
+@using ClosedXML
+@using ClosedXML.Excel
+@using MudBlazor
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
+@using System.Diagnostics
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Matrix.Prox3.IntelliZone.Blazor.Components
+@inject IJSRuntime js
+
+<div class="report-page">
+	<AuthorizeView>
+		<Authorized>	
+		 <div class="info-display-block rounded-xl">	
+			@if (SelectedSections.Count() != 1)
+			{
+				<DiagnosticCount
+					diagnosticEvents="DiagnosticEvents"
+					TopN="@TopN"
+					Interval="Interval"
+					chartTypeBar="ChartTypeBar"
+					level="1" />
+
+
+				<DiagnosticCount 
+					diagnosticEvents="DiagnosticEvents"
+					TopN="@TopN"
+					Interval="Interval"
+					chartTypeBar="ChartTypeBar"
+					level="4" />
+
+				<DiagnosticDuration 
+					diagnosticEvents="DiagnosticEvents"
+					TopN="@TopN"
+					Interval="Interval"
+					chartTypeBar="ChartTypeBar"
+					level="1" />
+
+
+				<DiagnosticDuration
+					diagnosticEvents="DiagnosticEvents"
+					TopN="@TopN"
+					Interval="Interval"
+					chartTypeBar="ChartTypeBar"
+					level="4" />
+
+			}
+			else
+			{
+				<DiagnosticCount 
+					diagnosticEvents="DiagnosticEvents"
+					TopN="@TopN"
+					Interval="Interval"
+					chartTypeBar="ChartTypeBar"
+					level="2" />
+
+				<DiagnosticCount diagnosticEvents="DiagnosticEvents"
+					TopN="@TopN"
+					Interval="Interval"
+					chartTypeBar="ChartTypeBar"
+					level="4" />
+
+				<DiagnosticDuration 
+					diagnosticEvents="DiagnosticEvents"
+					TopN="@TopN"
+					Interval="Interval"
+					chartTypeBar="ChartTypeBar"
+					level="2" />
+
+				<DiagnosticDuration diagnosticEvents="DiagnosticEvents"
+							TopN="@TopN"
+								Interval="Interval"
+								chartTypeBar="ChartTypeBar"
+								level="4" />
+
+				<div class=" graph-category-block">
+					<div class="me-2 justify-content-end">
+						Items per page:
+						<select @bind="@pagination.ItemsPerPage">
+							<option>10</option>
+							<option>20</option>
+							<option>50</option>
+							<option>100</option>
+							<option>200</option>
+						</select>
+					</div>
+					<QuickGrid class="table-bordered" Items="DiagnosticEvents.AsQueryable()" Pagination="@pagination">							
+						<Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Title="Section" Property="@(p=>p.Package.Machine.Section.SectionName)" Sortable="true" /> 
+						<Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Title="Machine" Property="@(p=>p.Package.Machine.MachName)" Sortable="true" /> 
+						<Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Title="Date/Time" Property="@(p=>p.Converted_Time)" Sortable="true" /> 
+						<Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Title="Status" Property="@(p=>p.State)" Sortable="true" /> 
+						<Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Title="Diagnostic Module" Property="@(p=>p.DiagnosticModule)" Sortable="true" /> 
+						<Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Title="Diagnostic Submodule" Property="@(p=>p.DiagnosticSubModule)" Sortable="true" /> 
+						<Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Title="Diagnostic Message" Property="@(p=>p.DiagnosticMessage)" Sortable="true" /> 
+						<Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Title="Duration (Minutes)" Property="@(p=>p.eventDuration != null ? Math.Round(((decimal)p.eventDuration)/1000000/60, 1) : 0 )" Sortable="true" /> 
+					</QuickGrid>
+							
+					<Paginator State="@pagination"/>
+				</div>
+			
+			}
+			
+		</div>
+		
+		</Authorized>
+			<NotAuthorized>
+				Please login to view this page
+			</NotAuthorized>
+	</AuthorizeView>
+
+</div>
+
+
+
+
+
+@code {
+
+
+
+	[CascadingParameter] public IModalService Modal { get; set; } = default!;
+
+	private bool isLoading = false;
+
+	private List<(DateTime?, PackageInfo?)>? tempMaintAn = new();
+
+	[Parameter]
+	public List<EventlogReport>? DiagnosticEvents { get; set; }
+
+	[Parameter]
+	public DateRange DateRange { get; set; }
+
+	[Parameter]
+	public int Interval { get; set; }
+
+	[Parameter]
+	public int Duration { get; set; }
+
+	[Parameter]
+	public bool ChartTypeBar { get; set; }
+
+	[Parameter]
+	public int? TopN { get; set; }
+
+	[Parameter]
+	public int[] SelectedSections { get; set; }
+
+	PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+	Dictionary<string, System.Reflection.PropertyInfo> properties = new Dictionary<string, System.Reflection.PropertyInfo>();
+	Dictionary<string, System.Reflection.PropertyInfo> tableproperties = new Dictionary<string, System.Reflection.PropertyInfo>();
+
+
+
+	private void InitializeDates()
+	{
+
+		// if (ReportStorage.DiagnosticEvents != null && ReportStorage.DiagnosticEvents.Any())
+		// {
+		// 	dates = ReportStorage.DiagnosticEvents.Select(s => s.Converted_Time).Distinct().ToList();
+		// 	if (dates.Any())
+		// 	{
+
+		// 		_dateRange.End = dates.Max();
+		// 		_dateRange.Start = dates.Max().AddDays(defaultdays);
+		// 	}
+
+		// }
+
+	}
+
+	// private async Task SectionChanged(ChangeEventArgs e)
+	// {
+	// 	var temp = (int[])e.Value;
+	// 	SelectedSections = temp;
+	// //	diagnosticEvents = ReportStorage.DiagnosticEvents.Where(s => s.Converted_Time >= (DateTime)_dateRange.Start && s.Converted_Time <= (DateTime)_dateRange.End && (SelectedSections.ToList()).Any(d => d == s.Package.Machine.Section.SectionId)).ToList();
+	// 	diagnosticEventsQue = diagnosticEvents.AsQueryable();
+	// 	//tempSummaries_ZoneBreach = ReportStorage.Summaries_ZoneBreach.Where(s => s.Date >= (DateTime)_dateRange.Start && s.Date <= (DateTime)_dateRange.End && (SelectedSections.ToList()).Any(d => d == s.myMachine.Section.SectionId)).ToList();
+
+	// }
+
+	// private async Task MineChanged(ChangeEventArgs e)
+	// {
+	// 	//diagnosticEvents = ReportStorage.DiagnosticEvents.Where(s => s.Converted_Time >= (DateTime)_dateRange.Start && s.Converted_Time <= (DateTime)_dateRange.End && ((IEnumerable<string>)e.Value).Any(d => d == s.Package.Machine.Section.Mine.MineName)).ToList();
+	// 	diagnosticEventsQue = diagnosticEvents.AsQueryable();
+	// 	//tempSummaries_ZoneBreach = ReportStorage.Summaries_ZoneBreach.Where(s => s.Date >= (DateTime)_dateRange.Start && s.Date <= (DateTime)_dateRange.End && ((IEnumerable<string>)e.Value).Any(d => d == s.myMachine.Section.Mine.MineName)).ToList();
+
+	// }
+
+	// private void IntervalChanged(ChangeEventArgs e)
+	// {
+
+	// 	Interval = (int)e.Value;
+	// }
+
+	// private async Task DateChanged(ChangeEventArgs e)
+	// {
+
+	// 	_dateRange = (DateRange)e.Value;
+	// //	tempSummaries_ZoneBreach = ReportStorage.Summaries_ZoneBreach.Where(s => s.Date >= (DateTime)_dateRange.Start && s.Date <= (DateTime)_dateRange.End && (SelectedSections.ToList()).Any(d => d == s.myMachine.Section.SectionId)).ToList();
+	// 	//diagnosticEvents = ReportStorage.DiagnosticEvents.Where(s => s.Converted_Time >= (DateTime)_dateRange.Start && s.Converted_Time <= (DateTime)_dateRange.End && (SelectedSections.ToList()).Any(d => d == s.Package.Machine.Section.SectionId)).ToList();
+	// 	diagnosticEventsQue = diagnosticEvents.AsQueryable();
+	// }
+
+	// private async Task TopNChanged(ChangeEventArgs e)
+	// {
+
+	// 	TopN = (int)e.Value;
+	// }
+
+	// private async Task ChartTypeChanged(ChangeEventArgs e)
+	// {
+
+	// 	chartTypeBar = (bool)e.Value;
+	// }
+
+
+}

@@ -1,0 +1,267 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using MudBlazor
+@inject HttpClient http
+
+@* <Toasts Class="p-3" Messages="messages" AutoHide="true" Delay="4000" Placement="ToastsPlacement.TopRight"></Toasts> *@
+<EditForm Model="employee" OnValidSubmit="Add">
+	<DataAnnotationsValidator />
+	<div class="row">
+		<div class="mb-1 d-flex justify-content-between">
+			<label class="fw-bolder col-6 required-label">Employee Code:</label> <div class="col-6">
+				<InputText class="form-control" type="text" @bind-Value="employee.EmployeeCode" />
+				<ValidationMessage For="@(() => employee.EmployeeCode)" />
+			</div>
+		</div>
+		<div class="mb-1 d-flex justify-content-between">
+			<div class="fw-bolder col-6">Name(s):</div>		<div class="col-6">
+				<InputText class="form-control" type="text" @bind-Value="employee.Names" />
+			</div>
+		</div>
+		<div class="mb-1 d-flex justify-content-between">
+			<div class="fw-bolder col-6">Surname:</div>		<div class="col-6">
+				<InputText class="form-control" type="text" @bind-Value="employee.Surname" />
+			</div>
+		</div>
+		<div class="mb-1 d-flex justify-content-between">
+			<div class="fw-bolder col-6">Initials:</div>	<div class="col-6">
+				<InputText class="form-control" type="text" @bind-Value="employee.Initials" />
+			</div>
+		</div>
+
+
+		<div class="d-flex mb-1 justify-content-between">
+			<label class="fw-bolder col-6 required-label">Section:</label>
+			<InputSelect class="form-select" @bind-Value="employee.Section.SectionId">
+				<option selected value="@employee!.Section!.SectionId">@employee!.Section!.SectionName</option>
+
+				@foreach (var option in sections)
+				{
+					<option value="@option.SectionId"> @option.SectionName</option>
+				}
+			</InputSelect>
+			<ValidationMessage For="@(() => employee.Section.SectionName)"/>
+			<Button Type="BlazorBootstrap.ButtonType.Submit" Active=false class="btn-outline-success" @onclick="@AddSection">New..</Button>
+		</div>
+
+		@* 		<div class="d-flex mb-1 justify-content-between">
+			<label class="fw-bolder col-6 required-label">Job Description:</label>
+			<InputSelect class="form-select" @bind-Value="employee.Job.Id">
+				<option selected value="@employee!.Job.Id">@employee!.Job.Description</option>
+
+			</InputSelect>
+
+			<Button Type="BlazorBootstrap.ButtonType.Submit" Active=false class="btn-outline-success" @onclick="@AddJob">New..</Button>
+		</div> *@
+
+
+
+		<div class="mb-1 d-flex justify-content-between">
+			<MudSwitch @bind-Value="employee.isActive" Color="Color.Primary" Label="Active" Class="mr-n2 mb-6" />
+
+		</div>
+		<div class="d-flex flex-row p-3 justify-content-center">
+
+			<button type="submit" class="btn btn-secondary">
+				@if (BlazoredModal.Title.Contains("Edit"))
+				{
+					<div>Update</div>
+				}
+				else
+				{
+					<div>Save</div>
+				}
+			</button>
+
+		</div>
+
+	</div>
+</EditForm>
+
+
+
+
+
+@code {
+
+	[CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+
+
+	[Inject] protected ToastService ToastService { get; set; } = default!;
+
+
+	[Parameter]
+	public Employee employee { get; set; } = new Employee();
+	public EditContext editContext = new EditContext(new Employee());
+	private string toastTitle { get; set; } = "";
+	private string toastMessage { get; set; } = "";
+	private string toastMessage2 { get; set; } = "";
+	List<ToastMessage> messages = new List<ToastMessage>();
+	private void ShowMessage(ToastType toastType) => messages.Add(CreateToastMessage(toastType));
+
+	private ToastMessage CreateToastMessage(ToastType toastType)
+	=> new ToastMessage
+		{
+			Type = toastType,
+			Title = toastTitle,
+			HelpText = $"{DateTime.Now}",
+			Message = toastMessage,
+		};
+
+
+
+	IQueryable<Job> jobs
+	{
+
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<Job>>("api/Jobs"));
+				t.Wait();
+				return t.Result.AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+
+		}
+
+	}
+
+	IQueryable<Section> sections
+	{
+
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<Section>>("api/Sections"));
+				t.Wait();
+				return t.Result.AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+
+		}
+
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+
+		if (employee == null)
+		{
+			employee = new();
+			employee.Job = new();
+			employee.Section = new();
+			employee.isActive = true;
+		}
+		else
+		{
+
+		}
+		if (employee.Section == null)
+		{
+			employee.Section = new();
+		}
+		if (employee.Job == null)
+		{
+			employee.Job = new();
+			employee.Job.JobLevel = new();
+		}
+		if (employee.Job.JobLevel == null)
+		{
+			employee.Job.JobLevel = new();
+		}
+		editContext = new EditContext(employee);
+	}
+
+	private async Task AddSection()
+	{
+		await ModalService.Show<SectionModal>("New Section").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task AddRoleCategory()
+	{
+		await ModalService.Show<JobTitleModal>("New Job Title").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task AddJob()
+	{
+		await ModalService.Show<JobModal>("New Job Description").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task Close() => await BlazoredModal.CloseAsync();
+
+	private async Task Add()
+	{
+		try
+		{
+			var isValid = editContext.Validate();
+			List<Employee>? currentEmployees = await http.GetFromJsonAsync<List<Employee>>("api/Employees");
+			if (currentEmployees?.FirstOrDefault(emp => emp.EmployeeCode == employee.EmployeeCode) != null && !BlazoredModal!.Title!.Contains("Edit"))
+			{
+				isValid = false;
+				toastTitle = "Warning";
+				toastMessage = "Duplicate Employee Code - Employee already exist";
+				ShowMessage(ToastType.Warning);
+			}
+			if (employee.Job == null || employee.Job.JobLevel == null)
+			{
+				isValid = false;
+				toastTitle = "Warning";
+				toastMessage = "Job Description cannot be null";
+				ShowMessage(ToastType.Warning);
+			}
+			if (isValid)
+			{
+				employee.Job = null;
+				var t = await http.PostAsJsonAsync<Employee>("api/Employees", employee);
+				if (t.IsSuccessStatusCode)
+				{
+
+
+					ToastService.Notify(new ToastMessage
+					{
+						Type = ToastType.Success,
+						Title = "Success",
+						HelpText = $"{DateTime.Now}",
+						Message = "New employee created"
+
+					});
+					//ShowMessage(ToastType.Success);
+                    await InvokeAsync(StateHasChanged);
+					//await Task.Delay(2000);
+					await Close();
+				}
+				else
+				{
+					toastTitle = "Error";
+					toastMessage = "Could not create employee";
+					toastMessage2 = $"Status Code: {t.StatusCode} - {t.Content}";
+					await InvokeAsync(StateHasChanged);
+					ShowMessage(ToastType.Danger);
+
+				}
+
+				await Close();
+			}
+		}
+		catch (Exception e)
+		{
+			toastTitle = "Error";
+			toastMessage = "Please contact support";
+			ShowMessage(ToastType.Danger);
+			Console.WriteLine(e);
+		}
+
+	}
+
+}

@@ -1,0 +1,119 @@
+.navbar-toggler {
+    background-Color: rgba(255, 255, 255, 0.1);
+}
+
+.top-row {
+    height: 5.5rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-brand {
+    font-size: 1.1rem;
+}
+
+
+btn.navbar {
+    background-Color: transparent;
+
+}
+
+.oi {
+    width: 2rem;
+    font-size: 1.1rem;
+    vertical-align: text-top;
+    top: -2px;
+}
+
+.nav-item {
+    display: flex !important;
+    position: relative !important;
+    width: 100% !important;
+    margin-bottom: 0.5rem !important;
+    transition: transform 0.3s ease;
+}
+
+.nav-item-content {
+    display: flex;
+    align-items: center;
+    width: 100%; /* Ensure the content takes the full width */
+}
+
+    .nav-item-content img {
+        margin-right: 5px; /* Adjust the margin as needed */
+    }
+
+.nav-item:hover .nav-item-content,
+.nav-item ::deep a:hover,
+.nav-item ::deep .nav-link:hover {
+    background-Color: white !important; /* Ensure background is white on hover */
+    border-radius: 5px;
+    padding: 5px; /* Add padding to ensure the hover effect covers the entire content */
+    Color: black !important; /* Ensure text Color is black on hover */
+}
+
+    .nav-item:hover .nav-item-content img,
+    .nav-item:hover .nav-item-content span {
+        Color: black !important; /* Ensure text Color is black on hover */
+        filter: none; /* Remove any filter on hover */
+    }
+
+.nav-L1 {
+    font-weight: bold;
+}
+
+.nav-L2 {
+    font-style: italic;
+}
+
+.nav-item ::deep a.active,
+.nav-item ::deep a:active,
+.nav-item ::deep a:focus,
+.nav-item ::deep .nav-link.active,
+.nav-item ::deep .nav-link:active,
+.nav-item ::deep .nav-link:focus {
+    background-Color: white !important; /* Ensure background is white when active */
+    Color: black !important; /* Ensure text Color is black when active */
+}
+
+
+.nav-item ::deep a:hover,
+.nav-item ::deep .nav-link:hover {
+    Color: black !important; /* Ensure text Color is black on hover */
+    background-Color: white !important;
+}
+
+.nav-item-icon {
+    width: 2.5rem; /* Adjust the width as needed */
+    height: 2.5rem; /* Adjust the height as needed */
+    flex-shrink: 0; /* Prevent the icon from resizing */
+    margin: 0; /* Remove extra margins */
+    padding: 5px; /* Adjust padding if needed */
+    transition: transform 0.3s ease; /* Smooth scaling on hover */
+}
+
+    .nav-item-icon:hover {
+        filter: none; /* Remove any filter on hover */
+    }
+
+.collapsedIcon {
+    padding: 5px;
+    width: 3rem;
+    height: 6rem;
+    font-size: 1.5rem;
+
+}
+
+.navbar-toggler {
+    display: flex;
+    align-items: center;
+    justify-items: center;
+}
+
+@media (min-width: 50px) {
+    .navbar-toggler {
+        display: block;
+    }
+}

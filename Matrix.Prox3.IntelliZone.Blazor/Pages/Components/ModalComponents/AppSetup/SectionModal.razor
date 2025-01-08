@@ -1,0 +1,251 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using MudBlazor.Utilities
+@using MudBlazor
+@using Matrix.Prox3.IntelliZone.Data.Models.Colors
+@using System.Text.Json
+
+@inject HttpClient http
+
+<Toasts Class="p-3" Messages="messages" AutoHide="true" Delay="4000" Placement="ToastsPlacement.TopRight"></Toasts>
+
+@if (section != null)
+{
+	<div class="h-50">
+
+
+		<div class="mb-1 d-flex justify-content-between">
+			<div class="fw-bolder col-6">Name:</div>	<div class="col-6">
+				<InputText class="form-control" type="text" @bind-Value="section.SectionName" />
+			</div>
+		</div>
+
+		<div class="d-flex mb-1 justify-content-between">
+			<div class="fw-bolder col-6">Mine:</div>
+			@if (mineProvided)
+			{
+				<div class="col-6">
+					<InputText Disabled class="form-control" type="text" @bind-Value="section.Mine.MineName" />
+				</div>
+			}
+			else
+			{
+				<InputSelect class="form-select" @bind-Value="section!.Mine!.MineName">
+					@if (section!.Mine!.MineName != null)
+					{
+						<option selected value="@(section!.Mine!.MineName)">@(section!.Mine!.MineName)</option>
+					}
+					else
+					{
+						<option selected value="">Select Mine...</option>
+					}
+
+					@if (mines != null)
+					{
+						@foreach (var option in mines)
+						{
+							<option value="@option.MineName"> @option.MineName</option>
+						}
+					}
+
+
+				</InputSelect>
+				<Button Type="BlazorBootstrap.ButtonType.Submit" Active=false class="btn-outline-success" @onclick="@AddMine">New..</Button>
+			}
+
+		</div>
+		<div class="my-Color-picker">
+			<MudColorPicker @bind-Value="Color" PickerVariant="PickerVariant.Static" ColorPickerView="ColorPickerView.Palette" Palette="ReportingColors.CustomPalette" ShowPreview=false ShowInputs=false ShowToolbar=false ShowSliders=false />
+		</div>
+	</div>
+
+
+	<div class="d-flex flex-row p-3 justify-content-center">
+
+		<Button Type="BlazorBootstrap.ButtonType.Submit" Active=false class="btn-outline-success" @onclick="Add">
+			@if (BlazoredModal.Title.Contains("Edit"))
+			{
+				<div>Update Section</div>
+			}
+			else
+			{
+				<div>Add Section</div>
+			}
+		</Button>
+		<Button Class="btn-outline-danger" @onclick="Delete">Delete</Button>
+	</div>
+
+}
+
+
+
+
+
+
+
+@code {
+
+	[CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+	[Parameter]
+	public Section? section { get; set; }
+	private MudColor Color;
+	private string toastTitle { get; set; } = "";
+	private string toastMessage { get; set; } = "";
+	private string toastMessage2 { get; set; } = "";
+	List<ToastMessage> messages = new List<ToastMessage>();
+	private void ShowMessage(ToastType toastType) => messages.Add(CreateToastMessage(toastType));
+
+	private ToastMessage CreateToastMessage(ToastType toastType)
+	=> new ToastMessage
+		{
+			Type = toastType,
+			Title = toastTitle,
+			HelpText = $"{DateTime.Now}",
+			Message = toastMessage,
+		};
+
+
+
+
+	IQueryable<Mine> mines
+	{
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<Mine>>("api/Mine"));
+				t.Wait();
+				return t.Result.AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+
+		}
+	}
+
+	private bool mineProvided = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+
+		if (section == null)
+		{
+			section = new();
+			section.Mine = new();
+		}
+		else
+		{
+			if (section.Color != null && section.Color != "")
+			{
+				Color = new MudColor(section.Color);
+			}
+
+			if ((section.Mine != null))
+			{
+				mineProvided = true;
+			}
+		}
+
+	}
+
+	private void ChangeColor(ChangeEventArgs e)
+	{
+
+	}
+
+	private async Task AddMine()
+	{
+		await ModalService.Show<MineModal>("New Mine").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task Close() => await BlazoredModal.CloseAsync();
+
+	private async Task Add()
+	{
+
+		if (section?.SectionName == null)
+		{
+			toastTitle = "Warning";
+			toastMessage = "Mine cannot be NULL";
+			ShowMessage(ToastType.Warning);
+			return;
+		}
+		else
+		{
+
+			if (Color != null)
+			{
+				section.Color = Convert.ToString(Color.Value);
+			}
+
+			try
+			{
+
+				var t = await http.PostAsJsonAsync<Section>("api/Sections", section);
+				if (t.IsSuccessStatusCode)
+				{
+					toastTitle = "Success";
+					toastMessage = "New section created";
+					ShowMessage(ToastType.Success);
+					await Close();
+				}
+				else
+				{
+					toastTitle = "Error";
+					toastMessage = "Could not create Section";
+					toastMessage2 = $"Status Code: {t.StatusCode} - {t.Content}";
+					ShowMessage(ToastType.Danger);
+					return;
+
+				}
+
+				await Close();
+			}
+			catch (Exception e)
+			{
+				toastTitle = "Error";
+				toastMessage = "Please contact support";
+				ShowMessage(ToastType.Danger);
+				return;
+				Console.WriteLine(e);
+			}
+
+
+		}
+
+
+	}
+
+
+	private async void Delete()
+	{
+		try
+		{
+
+			var t = await http.DeleteAsync($"api/Sections/{section.SectionId}");
+			if (t.IsSuccessStatusCode)
+			{
+				await Close();
+			}
+			else
+			{
+				ModalParameters message = new ModalParameters().Add(nameof(PopupMessage.BodyText), $"Status Code: {t.StatusCode} - Please delete all Foreign Keys allocated to this Section first");
+				ModalService.Show<PopupMessage>("Could not Delete Section", message);
+			}
+
+
+		}
+		catch (Exception e)
+		{
+			ModalParameters message = new ModalParameters().Add(nameof(PopupMessage.BodyText), "Please delete all Sections allocated to this mine first");
+			ModalService.Show<PopupMessage>("Could not Delete Section", message);
+		}
+
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+}

@@ -1,0 +1,70 @@
+﻿@page "/live"
+@inject NavigationManager Navigation
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.SignalR.Client
+@using Newtonsoft.Json
+@inject HubConnection hubConnection 
+
+
+<PageTitle>Live - Overview</PageTitle>
+
+@if (ControllerReports != null)
+{
+	 	<div>
+
+ 		<div>
+		<InRangeLocatorCount ControllerReports="@ControllerReports"></InRangeLocatorCount>
+		</div>
+		<div>
+		<InRangeLocator ControllerReports="@ControllerReports"></InRangeLocator>
+	</div> 
+		<div>
+		@* <LocatorLocationView  ControllerReports="ControllerReports"></LocatorLocationView> *@
+	</div>
+	<div>
+		 <LocatorTable ControllerReports="@ControllerReports" /> 
+	</div> 
+
+	</div>
+}
+
+
+@code {
+
+	private List<BlazorControllerReport> ControllerReports = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		hubConnection.On<string>("intellizonecontrollerlistener", async ( strdata) =>
+		{
+			BlazorControllerReport cdata = JsonConvert.DeserializeObject<BlazorControllerReport>(strdata);
+			var temp = ControllerReports.FirstOrDefault(s => s.IP == cdata.IP);
+			if (temp != null && cdata != null)
+			{
+
+				ControllerReports.Remove(temp);
+				ControllerReports.Add(cdata);
+				await InvokeAsync(StateHasChanged);
+			}
+			else
+			{
+				ControllerReports.Add(cdata);
+				await InvokeAsync(StateHasChanged);
+			}
+		});
+	}
+
+	// public System.IO.Stream GenerateStreamFromString(string s)
+	// {
+	// 	var stream = new MemoryStream();
+	// 	var writer = new StreamWriter(stream);
+	// 	writer.Write(s);
+	// 	writer.Flush();
+	// 	stream.Position = 0;
+	// 	return stream;
+	// }
+
+
+
+
+}

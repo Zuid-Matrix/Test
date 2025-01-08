@@ -1,0 +1,155 @@
+﻿@page "/employees"
+@using Matrix.Prox3.IntelliZone.Data.Reporting
+@inject NavigationManager uriHelper
+@inject IJSRuntime js
+
+
+
+<PageTitle>Employee Manager</PageTitle>
+<CascadingAuthenticationState>
+<AuthorizeView>
+    <Authorized>
+		<body>
+
+
+
+			<hr />
+@* 
+			@using (ProxLocalConnectionContext _allocationContext = _allocationcontexttextfactory.CreateDbContext())
+			{
+				@if (!_allocationContext.Allocations.Any())
+				{
+					
+				
+				}
+			} *@
+
+@* 		<button class="btn btn-outline-dark m-2" @onclick="Save">Export</button>
+		<button class="btn btn-outline-dark m-2" @onclick="Clear">Clear</button> *@
+ 			<div>
+				 @if (!busy)
+				 {
+					<div class="d-flex flex-row">
+						<div class="quickgrid-display-block  me-3">
+		
+							<Employees />
+						</div>
+					</div>
+				 }
+			</div>
+		</body>
+</Authorized>
+ <NotAuthorized>
+	You are not authorized to view this page
+</NotAuthorized> 
+</AuthorizeView>
+</CascadingAuthenticationState>
+
+
+@code {
+
+	private bool busy = false;
+
+
+
+
+	private System.Threading.Timer? timer; // NOTE: THIS LINE OF CODE ADDED;
+
+	private int refreshcount = 0;
+	protected override async Task OnInitializedAsync()
+	{
+		System.Globalization.CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+		//_employeeContext = await _employeecontextfactory.CreateDbContextAsync();
+		// _allocationContext = await _allocationcontexttextfactory.CreateDbContextAsync();
+
+	}
+
+
+	public void Dispose()
+	{
+
+		if (timer != null) timer.Dispose();
+
+
+	}
+	private async Task Save()
+	{
+
+		//var temp = _reportbuilder.GenerateEmployeesWorkbook();
+		//	temp.Position = 0;
+
+		try
+		{
+			var filename = "Employees";
+			filename += Convert.ToString(DateTime.Now);
+			filename += ".xlsx";
+			//await js.InvokeVoidAsync("BlazorDownloadFile", filename, temp);
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine(e);
+		}
+
+	}
+
+	private void Update(Allocation e)
+	{
+		//e.AllocationDate = DateTime.Now;
+		//_allocationContext.Update(e);
+		//_allocationContext.SaveChanges();
+
+
+	}
+	private async Task Clear()
+	{
+		//await evserver.ClearAllocations();
+		//await evserver.GetLocatorsFromEventlogs();
+	}
+
+
+	private async Task Import(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		busy = true;
+		if (file.Name.EndsWith(".csv") || file.Name.EndsWith(".xlsx"))
+		{
+		//	await _reportbuilder.ImportEmployees(file);
+		}
+		else if (file.Name.EndsWith(".json"))
+		{
+
+		}
+
+		await InvokeAsync(StateHasChanged);
+		busy = false;
+	}
+
+	private async Task ImportHistory(InputFileChangeEventArgs e)
+	{
+
+		var files = e.GetMultipleFiles(15);
+
+		var activelocators = files.FirstOrDefault(s => s.Name == "ActiveLocators.json");
+		var allocations = files.FirstOrDefault(s => s.Name == "Allocations.json");
+		var chargingpoints = files.FirstOrDefault(s => s.Name == "ChargingPoints.json");
+		var controllers = files.FirstOrDefault(s => s.Name == "Controllers.json" || s.Name == "Devices.json");
+		var employees = files.FirstOrDefault(s => s.Name == "Employees.json");
+		var RoleCategories = files.FirstOrDefault(s => s.Name == "RoleCategories.json");
+		var Roles = files.FirstOrDefault(s => s.Name == "Roles.json");
+		var locations = files.FirstOrDefault(s => s.Name == "Locations.json");
+		var locatorreports = files.FirstOrDefault(s => s.Name == "LocatorReports.json");
+		var locators = files.FirstOrDefault(s => s.Name == "Locators.json");
+		var machines = files.FirstOrDefault(s => s.Name == "Machines.json");
+		var mines = files.FirstOrDefault(s => s.Name == "Mines.json");
+		var sections = files.FirstOrDefault(s => s.Name == "Sections.json");
+		var shifts = files.FirstOrDefault(s => s.Name == "Shifts.json");
+
+
+		//await _importer.ImportHistoryfromJsonFile(activelocators, allocations, chargingpoints, controllers, employees, RoleCategories, Roles, locations, locatorreports, locators, mines, machines, sections, shifts);
+		await InvokeAsync(StateHasChanged);
+			busy = false;
+		
+
+	}
+
+}

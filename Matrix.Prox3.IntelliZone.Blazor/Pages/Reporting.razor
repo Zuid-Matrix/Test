@@ -1,0 +1,334 @@
+﻿@page "/eventlogreporting"
+@using System.IO.Compression
+@using System.Threading.Tasks
+@using System.Globalization
+@using ClosedXML
+@using ClosedXML.Excel
+@using MudBlazor
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
+@using System.Diagnostics
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Matrix.Prox3.IntelliZone.Blazor.Components
+@inject IConfiguration config
+@inject HttpClient http
+
+
+<PageTitle>Reporting</PageTitle>
+
+@if(!busy)
+{
+	<AuthorizeView>
+		<Authorized>
+			<div class="d-flex">
+				<div class="filter-sidebar  col-2 mt-5 me-2">
+					<ReportFilterVertical AvailableDates="dates" onSectionChange="SectionChanged" onIntervalChange="IntervalChanged" onDateChange="DateChanged" onChartTypeChange="ChartTypeChanged" onTopNChange="TopNChanged" />
+				</div>
+
+				<div class="col-10 tab-selector">
+					@* <DateReportFilter  AvailableDates="dates" onIntervalChange="IntervalChanged" onDateChange="DateChanged" onChartTypeChange="ChartTypeChanged"/> *@
+
+					<Tabs Class="tab-selector">
+						@if (Summaries_ZoneBreach != null)
+						{
+							<Tab Title="Interactions" Class="fw-bolder tab-selector" Active="true">
+								<Content>
+									<Interactions Summaries_ZoneBreach="tempSummaries_ZoneBreach" DateRange="_dateRange" Interval="Interval" Duration="Duration" ChartTypeBar="chartTypeBar" SelectedSections="SelectedSections" TopN="TopN" />
+								</Content>
+							</Tab>
+						}
+						@if (diagnosticEvents != null)
+						{
+							<Tab Title="Diagnostics" Class="fw-bolder tab-selector">
+								<Content>
+									<Diagnostics DiagnosticEvents="tempDiagnosticEvents" DateRange="_dateRange" Interval="Interval" Duration="Duration" ChartTypeBar="chartTypeBar" SelectedSections="SelectedSections" TopN="TopN" />
+								</Content>
+							</Tab>
+						}
+						@if (tempMaintenanceModeEvents != null && tempSummaries_ZoneBreach !=null)
+						{
+							<Tab Title="Maintenance Mode">
+								<Content>
+									<MaintenanceMode Summaries_ZoneBreach="tempSummaries_ZoneBreach"  MaintenanceModeEvents="tempMaintenanceModeEvents" DateRange="_dateRange" Interval="Interval" Duration="Duration" ChartTypeBar="chartTypeBar" SelectedSections="SelectedSections" TopN="TopN" />
+								</Content>
+							</Tab>
+						}
+						@if (tempPackages != null)
+						{
+							<Tab Title="ProxPackage Overview">
+								<Content>
+									<ProxPackageOverview Packages="tempPackages" />
+								</Content>
+							</Tab>
+						}
+
+
+						@* 						<Tab Title="Usage">
+							<Content>
+								<StaticReports Reports="Reports" />
+							</Content>
+						</Tab>
+
+						<Tab Title="Reports">
+							<Content>
+								<StaticReports Reports="Reports" />
+							</Content>
+						</Tab> *@
+
+					</Tabs>
+				</div>
+			</div>
+		</Authorized>
+		<NotAuthorized>
+			Please login to view this page
+		</NotAuthorized>
+	</AuthorizeView>
+
+}
+else
+{
+	<NoData/>
+}
+
+
+
+
+
+
+
+
+
+@code {
+
+	private DateRange _dateRange = new DateRange();
+	private int Interval = 0;
+	private int Duration = 1;
+	private bool chartTypeBar = false;
+	private int? TopN = null;
+	private int[]? SelectedSections = [];
+	private List<DateTime>? dates = new();
+	private bool busy = true;
+	private static int defaultdays = -7;
+	private List<ZoneBreachSummary>? tempSummaries_ZoneBreach { get; set; }
+	private List<ZoneBreachSummary>? Summaries_ZoneBreach { get; set;  }
+	private List<EventlogReport>? diagnosticEvents { get; set; }
+	private List<EventlogReport>? tempDiagnosticEvents { get; set; }
+	private List<EventlogReport>? maintenanceModeEvents { get; set; }
+	private List<EventlogReport>? tempMaintenanceModeEvents { get; set; }
+	private List<PackageInfo>? tempPackages;
+	private List<PackageInfo>? packages;
+	private List<Report>? Reports;
+	private List<ScheduledReport>? ScheduledReports;
+
+
+	protected override async Task OnInitializedAsync()
+	{
+
+		var temp = CultureInfo.GetCultureInfo("es-ES");
+		CultureInfo.CurrentCulture = temp;
+		
+	}
+
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			busy = true;
+			while (packages == null || Summaries_ZoneBreach == null || diagnosticEvents == null || maintenanceModeEvents == null)
+			{
+				if (!InitializeData())
+				{
+					await Task.Run(async () => await Task.Delay(10000));
+				}
+				
+			}
+			InitializeDates();
+			busy = false;
+			await InvokeAsync(StateHasChanged);
+		}
+
+
+	}
+
+	private bool InitializeData()
+	{
+		List<Task> tasks = new();
+		bool success = true;
+		if (Summaries_ZoneBreach == null)
+		{
+
+			var t = Task.Run(async () =>
+			{
+				try
+				{
+					var result = await http.GetFromJsonAsync<List<ZoneBreachSummary>>("api/Summaries_ZoneBreach/all");
+					Summaries_ZoneBreach = result;
+					tempSummaries_ZoneBreach = Summaries_ZoneBreach.Where(s => s.Date >= _dateRange.Start && s.Date <= _dateRange.End).ToList();
+				}
+				catch
+				{
+					success = false;
+					Summaries_ZoneBreach = null;
+					
+				}
+
+			});
+			tasks.Add(t);
+		}
+
+		if (diagnosticEvents == null)
+		{
+			var t = Task.Run(async () => 
+			{
+				try
+				{
+					var result = await http.GetFromJsonAsync<List<EventlogReport>>("api/EventlogReports/diagnostics");
+					diagnosticEvents = result;
+					tempDiagnosticEvents = diagnosticEvents.Where(s => s.Converted_Time >= _dateRange.Start && s.Converted_Time <= _dateRange.End).ToList();
+				}
+				catch
+				{
+					success = false;
+					diagnosticEvents = null;
+				}
+
+			}
+			);
+			tasks.Add(t);
+		}
+
+		if ( maintenanceModeEvents == null)
+		{
+			var t = Task.Run(async () =>
+			{
+				try
+				{
+					var result = await http.GetFromJsonAsync<List<EventlogReport>>("api/EventlogReports/maintenance");
+					maintenanceModeEvents = result;
+					tempMaintenanceModeEvents = maintenanceModeEvents.Where(s => s.Converted_Time >= _dateRange.Start && s.Converted_Time <= _dateRange.End).ToList();
+
+				}
+				catch
+				{
+					success = false;
+					maintenanceModeEvents = null;
+				}
+
+			});
+			tasks.Add(t);
+
+		}
+
+		if ( packages == null)
+		{
+
+			var t = Task.Run(async () => {
+				try
+				{
+					var result = await http.GetFromJsonAsync<List<PackageInfo>>("api/File");
+					packages = result;
+					tempPackages = packages.Where(s => s.EndDate <= _dateRange.End).ToList();
+				}
+				catch
+				{
+					success = false;
+					packages = null;
+				}
+
+
+			});
+			tasks.Add(t);
+
+		}
+
+
+		Task.WaitAll(tasks.ToArray());
+
+		return success;
+
+	}
+	/// <summary>
+	/// Initializes the date based on available for first render
+	/// </summary>
+	private void InitializeDates()
+	{
+
+
+
+		if (Summaries_ZoneBreach != null && Summaries_ZoneBreach.Any())
+		{
+			dates = Summaries_ZoneBreach.Select(s => s.Date).Distinct().ToList();
+			dates.AddRange(packages.Select(s => s.EndDate).Distinct().ToList());
+			dates.AddRange(packages.Select(s => s.StartDate).Distinct().ToList());
+			if (dates.Any())
+			{
+
+				_dateRange.End = dates.Max();
+				_dateRange.Start = dates.Max().AddDays(defaultdays);
+			}
+
+		}
+
+	}
+
+
+
+	private async Task IntervalChanged(ChangeEventArgs e)
+	{
+
+		Interval = (int)e.Value;
+	}
+
+	private async Task DateChanged(ChangeEventArgs e)
+	{
+
+		_dateRange = (DateRange)e.Value;
+		tempSummaries_ZoneBreach = Summaries_ZoneBreach.Where(s => s.Date >= (DateTime)_dateRange.Start && s.Date <= (DateTime)_dateRange.End && (SelectedSections.ToList()).Any(d => d == s.myMachine.Section.SectionId)).ToList();
+		tempDiagnosticEvents = diagnosticEvents.Where(s => s.Converted_Time >= (DateTime)_dateRange.Start && s.Converted_Time <= (DateTime)_dateRange.End && (SelectedSections.ToList()).Any(d => d == s.Package.Machine.Section.SectionId)).ToList();
+		tempMaintenanceModeEvents = maintenanceModeEvents.Where(s => s.Converted_Time >= (DateTime)_dateRange.Start && s.Converted_Time <= (DateTime)_dateRange.End && (SelectedSections.ToList()).Any(d => d == s.Package.Machine.Section.SectionId)).ToList();
+		tempPackages = packages.Where(s =>  s.EndDate <= _dateRange.End && (SelectedSections.ToList()).Any(d => d == s.Machine.Section.SectionId)).ToList();
+
+	}
+
+	private async Task TopNChanged(ChangeEventArgs e)
+	{
+
+		TopN = (int)e.Value;
+	}
+
+	private async Task ChartTypeChanged(ChangeEventArgs e)
+	{
+
+		chartTypeBar = (bool)e.Value;
+	}
+
+
+
+	private  void SectionChanged(ChangeEventArgs e)
+	{
+		var temp = (int[])e.Value;
+		busy = true;
+		StateHasChanged();
+		InvokeAsync(()=>StateHasChanged());
+		SelectedSections = temp;
+		tempSummaries_ZoneBreach = Summaries_ZoneBreach.Where(s => s.Date >= (DateTime)_dateRange.Start && s.Date <= (DateTime)_dateRange.End && (SelectedSections.ToList()).Any(d => d == s.myMachine.Section.SectionId)).ToList();
+		tempDiagnosticEvents = diagnosticEvents.Where(s => s.Converted_Time >= (DateTime)_dateRange.Start && s.Converted_Time <= (DateTime)_dateRange.End && (SelectedSections.ToList()).Any(d => d == s.Package.Machine.Section.SectionId)).ToList();
+		tempMaintenanceModeEvents = maintenanceModeEvents.Where(s => s.Converted_Time >= (DateTime)_dateRange.Start && s.Converted_Time <= (DateTime)_dateRange.End && (SelectedSections.ToList()).Any(d => d == s.Package.Machine.Section.SectionId)).ToList();
+		tempPackages = packages.Where(s =>  s.EndDate <= _dateRange.End && (SelectedSections.ToList()).Any(d => d == s.Machine.Section.SectionId)).ToList();
+
+		busy = false;
+		InvokeAsync(StateHasChanged);
+	}
+
+	private async Task MineChanged(ChangeEventArgs e)
+	{
+		tempSummaries_ZoneBreach = Summaries_ZoneBreach.Where(s => s.Date >= (DateTime)_dateRange.Start && s.Date <= (DateTime)_dateRange.End && ((IEnumerable<string>)e.Value).Any(d => d == s.myMachine.Section.Mine.MineName)).ToList();
+		tempDiagnosticEvents = diagnosticEvents.Where(s => s.Converted_Time >= (DateTime)_dateRange.Start && s.Converted_Time <= (DateTime)_dateRange.End && ((IEnumerable<string>)e.Value).Any(d => d == s.Package.Machine.Section.Mine.MineName)).ToList();
+		tempMaintenanceModeEvents = maintenanceModeEvents.Where(s => s.Converted_Time >= (DateTime)_dateRange.Start && s.Converted_Time <= (DateTime)_dateRange.End && ((IEnumerable<string>)e.Value).Any(d => d == s.Package.Machine.Section.Mine.MineName)).ToList();
+		tempPackages = packages.Where(s => s.EndDate <= _dateRange.End && ((IEnumerable<string>)e.Value).Any(d => d == s.Machine.Section.Mine.MineName)).ToList();
+
+	}
+
+
+}

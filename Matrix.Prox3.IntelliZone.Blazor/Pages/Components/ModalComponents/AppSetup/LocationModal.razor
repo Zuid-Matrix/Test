@@ -1,0 +1,138 @@
+﻿@* @namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@inject IDbContextFactory<ProxLocalConnectionContext> ctxFactory
+
+
+<body class="w-100 m-0">
+				
+
+	@if (Location != null)
+	{
+		@using (var ctx =ctxFactory.CreateDbContext())
+		{
+			var temp = ctx.Sections.ToList();
+			<div class="mb-1 d-flex justify-content-between">
+				<div class="fw-bolder col-6">Name:</div>	<div class="col-6">	<InputText class="form-control" type="text" @bind-Value="Location.LocationName" /></div>
+			</div>
+			
+
+			<div class="d-flex mb-1 justify-content-between">
+				<div class="fw-bolder col-6">Section:</div>
+				<InputSelect class="form-select" @bind-Value="Location!.Section.SectionId">
+					<option selected value="@Location!.Section.SectionId">@Location!.Section.SectionName</option>
+					@using (ProxLocalConnectionContext ctx2 = ctxFactory.CreateDbContext())
+					{
+						@foreach (var option in ctx2.Sections)
+						{
+							<option value="@option.SectionId"> @option.SectionName</option>
+						}
+					} 
+				</InputSelect>
+				<Button Type="ButtonType.Submit" Active=false class="btn-outline-success" @onclick="@AddSection">New..</Button>
+			</div>
+			
+			<div class="d-flex flex-row p-3 justify-content-center">
+				<Button Type="ButtonType.Submit" Active=false class="btn-outline-success" @onclick="Add">
+					@if (BlazoredModal.Title.Contains("Edit"))
+					{
+						<div>Update Location</div>
+					}
+					else
+					{
+						<div>Add Location</div>
+					}
+				</Button>
+					@* <Button class="btn-outline-D" @onclick="Close">Close</Button> 
+			</div>
+		}
+	}	
+					
+</body>
+
+	
+
+
+
+@code {
+
+	[CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+
+	// [Parameter]
+	// public DeviceLocation? Location { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (Location == null)
+		{
+			Location = new();
+			Location.Section = new();
+
+		}
+	}
+
+	private async Task AddSection()
+	{
+		await ModalService.Show<SectionModal>("New Section").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task Close() => await BlazoredModal.CloseAsync();
+
+	private async Task Add()
+	{
+		using (var ctx = await ctxFactory.CreateDbContextAsync())
+		{
+
+
+			if (ctx.Locations.Find(Location!.LocationName) != null && !BlazoredModal!.Title!.Contains("Edit"))
+			{
+				ModalParameters message = new ModalParameters().Add(nameof(PopupMessage.BodyText), "Location already exist");
+				ModalService.Show<PopupMessage>("Error", message);
+			}
+			else if (ctx.Sections.Find(Location!.Section!.SectionId) == null)
+			{
+				ModalParameters message = new ModalParameters().Add(nameof(PopupMessage.BodyText), "Section cannot be NULL");
+				ModalService.Show<PopupMessage>("Error", message);
+			}
+			else
+			{
+				Location.Section = ctx.Sections.Find(Location.Section.SectionId);
+				if ( ctx.Locations.Find(Location.LocationName) == null)
+				{
+
+					try
+					{
+						ctx.Locations.Add(Location);
+						await ctx.SaveChangesAsync();
+						await Close();
+					}
+					catch (Exception e)
+					{
+						Console.WriteLine(e);
+					}
+
+				}
+				else
+				{
+					var ToUpdate = ctx.Locations.Find(Location.LocationName);
+					ToUpdate.Section = ctx.Sections.Find(Location.Section.SectionId);
+					try
+					{
+						ctx.Locations.Update(ToUpdate);
+						await ctx.SaveChangesAsync();
+						await Close();
+					}
+					catch (Exception e)
+					{
+						Console.WriteLine(e);
+					}
+
+				}
+
+			}
+
+		}
+
+	}
+
+} *@

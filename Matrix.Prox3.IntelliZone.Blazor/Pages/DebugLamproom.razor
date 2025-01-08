@@ -1,0 +1,67 @@
+﻿@page "/lamproomdebug"
+@inject HubConnection hubConnection
+@using Microsoft.AspNetCore.SignalR.Client
+@using Newtonsoft.Json
+
+
+<PageTitle>Debug</PageTitle>
+
+<body>
+
+	<div>
+
+		<DebugLocatorReports LocatorLogs="locatorLogs"/>
+	</div>
+	<div>
+		<LocatorTable ControllerReports="@ControllerReports" />
+	</div>
+
+	<div>
+		<AppStatusTable Controllerlog="devicelogs" />
+	</div>
+</body>
+
+@code {
+
+	private List<BlazorControllerReport> ControllerReports = new();
+
+	private List<LocatorLog> locatorLogs = new();
+	private List<DeviceConnectionLog> devicelogs = new();
+	protected override async Task OnInitializedAsync()
+	{
+
+			hubConnection.On<string>("intellizonecontrollerlistener", async (strdata) =>
+			{
+			BlazorControllerReport cdata = JsonConvert.DeserializeObject<BlazorControllerReport>(strdata);
+			var temp = ControllerReports.FirstOrDefault(s => s.IP == cdata.IP);
+			if (temp != null && cdata != null)
+			{
+
+				ControllerReports.Remove(temp);
+				ControllerReports.Add(cdata);
+				await InvokeAsync(StateHasChanged);
+			}
+			else
+			{
+				ControllerReports.Add(cdata);
+				await InvokeAsync(StateHasChanged);
+			}
+			});
+
+
+		hubConnection.On<List<LocatorLog>>("intellizonelocatorloglistener", async (data) =>
+		{
+			locatorLogs = data;
+			await InvokeAsync(StateHasChanged);
+		});
+
+		hubConnection.On<List<DeviceConnectionLog>>("intellizonecontrollerloglistener", async (data) =>
+		{
+		devicelogs = data;
+		await InvokeAsync(StateHasChanged);
+		});
+
+	}
+
+
+}

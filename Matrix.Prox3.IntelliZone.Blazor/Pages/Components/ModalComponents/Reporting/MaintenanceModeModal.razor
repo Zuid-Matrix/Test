@@ -1,0 +1,100 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+
+			
+
+
+
+		<div class="info-display-block bg-secondary-subtle rounded-xl">
+			<div>
+
+				<div class="m-4 flex flex-row">
+					<div class="page-size-chooser">
+						Items per page:
+						<select @bind="@pagination.ItemsPerPage">
+							<option>10</option>
+							<option>20</option>
+							<option>50</option>
+							<option>100</option>
+							<option>200</option>
+						</select>
+					</div>
+					
+				</div>
+				@if (tempList != null)
+				{
+					<QuickGrid class="table-bordered background-inherit" Items="@tempList" TGridItem="EventlogReport" Pagination="@pagination">
+						<PropertyColumn Property="@(p => p.Converted_Time)"  Title="Date" Sortable="true" />
+						<PropertyColumn Property="@(p =>  p.Package!.Machine!.Section!.SectionName)" Title="Section" Sortable="true" />
+						<PropertyColumn Property="@(p => p.Package!.Machine!.MachName)" Title="Machine" Sortable="true" />
+						<PropertyColumn Class="quickgrid-wrap" Property="@(p => p.currOperator)" Title="Operator" Sortable="true" />
+						<PropertyColumn Class="quickgrid-wrap qc-max-width-300" Property="@(p => p.currShutdownZone)" Title="In Zones" Sortable="true" />
+						<TemplateColumn Title="Duration(min)">
+
+							@if (context.eventDuration != null)
+							{
+								<p>@Math.Round((decimal)context.eventDuration / 1000000 / 60)</p>
+							}
+
+
+						</TemplateColumn>
+						<TemplateColumn Title="Who was here:">
+				@* 			@using (ProxLocalConnectionContext ctx = ctxFactory.CreateDbContext())
+							{
+								var temp = ctx.Employees.ToList();
+								foreach (var locator in ctx.Locators)
+								{
+									if (locator.MNID != null)
+									{
+										if (context.currOperator.Contains(locator.MNID))
+										{
+											var allocation = ctx.Allocations.Where(s => s.Locator.MNID == locator.MNID).ToList().MaxBy(s => s.AllocationDate);
+											if (allocation != null && allocation.Employee != null)
+											{
+												<div> @locator.MNID -  @allocation.Employee.Surname, @allocation.Employee.Initials</div>
+											}
+
+										}
+									}
+
+
+								}
+							} *@
+						</TemplateColumn>
+
+					</QuickGrid>
+					<Paginator State="@pagination" />
+				}
+
+			</div>
+		</div>
+
+
+	
+
+	
+
+
+
+@code {
+
+	[CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+
+	[Parameter]
+	public IQueryable<EventlogReport>? tempList { get; set; }
+	PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		Console.WriteLine();
+	}
+
+
+
+	private async Task Close() => await BlazoredModal.CloseAsync();
+
+
+}

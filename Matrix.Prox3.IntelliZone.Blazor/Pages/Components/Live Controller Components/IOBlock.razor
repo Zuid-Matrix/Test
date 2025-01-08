@@ -1,0 +1,35 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+
+
+    
+        @if (io != null)
+        {
+            <div class="p-1">
+        <div style="font-weight:bold">
+            <b>  @io.label</b>
+
+        </div>
+        <div class="flex  flex-row">
+                @foreach (var IO in io.digital_io)
+                {
+            <svg height="@(radius*2)" width="@(radius*2)">
+                <circle cx="@radius" cy="@radius" r="@(radius*0.8)" stroke="black" stroke-width="@(radius *0.05)" fill="@(IO.value == 0 ? Color : ColorON)" />
+                <text x="50%" y="50%" text-anchor="middle" alignment-baseline="central" fill="#fff" font-size="@(radius*0.9)px">@IO.num</text>
+            </svg>
+                }
+        </div>
+    </div>
+        }
+        
+
+
+@code {
+
+    int radius { get; set; } = 10;
+    string Color { get; set; } = "grey";
+    string ColorON { get; set; } = "blue";
+
+    [Parameter]
+    public MachineIOGroup? io { get; set; }
+
+}

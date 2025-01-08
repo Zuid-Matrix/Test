@@ -1,0 +1,67 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Microsoft.EntityFrameworkCore
+@using System.Threading.Tasks
+@using System.Drawing
+@using System.Data
+
+@lock (ControllerReports)
+{
+	@foreach (var section in ControllerReports.Select(s => s.Section.SectionName).Distinct())
+	{
+
+
+	
+	var controllers = ControllerReports.Where(s => s.Section.SectionName == section);
+	var tempControllerShiftseconds = controllers.Where(s => s.shiftSeconds != null).Select(z => z.shiftSeconds).Min();
+ 	var tempList = ControllerReports.Where(s=>s.Section.SectionName == section).SelectMany(s=>s.ActiveLocators).Where(s => s.LocatorType != LocatorType.LOCATOR_TYPE_MML).ToList();
+	<div class="info-display-block rounded-xl location-block">
+		<div class="location-overview-block info-black rounded-xl">
+			<div class="w-50"><b>@(section)</b></div>
+			<div class="flex-grow-1">
+				<div class="info-block info-green">
+					<InfoBlockNumber header="AWAKE" value="@tempList.Where(s => s.locatorProximityState == LocatorProximityState.Tracking || s.locatorProximityState == LocatorProximityState.Active || s.locatorProximityState == LocatorProximityState.AtMachine).Select(s=>s.decMNID).Distinct().Count()"> </InfoBlockNumber>
+				</div>
+				<div class="info-block info-green">
+					<InfoBlockNumber header="HERE" value="@tempList.Where(s => s.locatorProximityState == LocatorProximityState.InactiveHere).Select(s=>s.decMNID).Distinct().Count()"> </InfoBlockNumber> 
+				</div>
+				<div class="info-block info-blue">
+					<InfoBlockNumber header="AWAY" value="@tempList.Where(s => s.locatorProximityState == LocatorProximityState.InactiveLeft ).Select(s=>s.decMNID).Distinct().Count()"> </InfoBlockNumber>
+				</div>
+
+				<div class="info-block info-blue">
+					<InfoBlockNumber header="Manual/Removed" value="@tempList.Where(s => s.cleared == true).Select(s=>s.decMNID).Distinct().Count()"></InfoBlockNumber>
+				</div>
+				<div class="info-block info-grey">
+					<InfoBlockNumber header="TOTAL" value="@tempList.Select(s=>s.decMNID).Distinct().Count()"></InfoBlockNumber>
+				</div>
+			</div>
+		</div> 
+			
+	<div class="w-100 m-0">
+
+		 	@foreach (var controller in controllers)
+			{
+
+				<PDSControllerOverview Controller="@controller" ControllerReport="@ControllerReports.FirstOrDefault(s => s.IP == controller.IP)"></PDSControllerOverview>
+
+			} 
+		</div>
+
+	 </div> 
+		
+	}
+}
+
+
+
+
+@code {
+
+
+
+
+	[Parameter]
+	public List<BlazorControllerReport> ControllerReports { get; set; }
+
+
+}

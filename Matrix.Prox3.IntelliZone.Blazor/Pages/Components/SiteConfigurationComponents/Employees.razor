@@ -1,0 +1,376 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using System.Threading.Tasks
+@using System.Drawing
+@using System.Data;
+@inject ILogger<Employees> _logger
+@inject HttpClient http
+  
+<div class="component-headings">Employees</div>
+<hr class="mt-0" />
+  
+<br />
+<div class="row">
+ <div class="col-2">
+		<button class="btn btn-outlineprimary" @onclick="@Add">Add new Employee</button>
+ </div>
+ <div class="col-2">
+		<input style="margin-top: 10px; margin-left: 10px;" type="checkbox" @bind="onlyNonAlloc" /> Only Show Non-Allocated
+ </div>
+</div>
+
+<br />
+<div class="page-size-chooser">
+	Items per page:
+	<select class="showlines" @bind="@pagination.ItemsPerPage">
+		<option selected>10</option>
+		<option>20</option>
+		<option>50</option>
+		<option>100</option>
+		<option>200</option>
+	</select>
+</div>
+	
+<div>
+
+	<QuickGrid class="table" TGridItem="Employee" Items="employees" Pagination="@pagination">
+		<PropertyColumn Property="@(p => p.EmployeeCode)" Title="Employee code" Sortable="true" />
+		<PropertyColumn Property="@(p => p.Initials)" Sortable="true" />
+		<PropertyColumn Property="@(p => p.Names)" Title="Name" Sortable="true" />
+		<PropertyColumn Property="@(p => p.Surname)"Sortable="true" />
+		<PropertyColumn Property="@(p =>p.Job !=null ? p.Job.Description : ""   )" Title="Role" Sortable="true" />
+		<PropertyColumn Property="@(p => p.Job != null && p.Job.JobLevel !=null ? p.Job.JobLevel.Type : "" )" Title="Level" Sortable="true" />
+		<PropertyColumn Property="@(p => p.Section == null ? "Not Allocated" : p.Section.SectionName)" Title="Section" Sortable="true" />
+			<TemplateColumn>
+					<button class="btn btn-light" @onclick="()=>Update(context)">Edit</button>
+
+				</TemplateColumn>
+	</QuickGrid>
+	<Paginator State="@pagination" />
+</div>
+	
+@* 	<div class="quickgrid-display-block  me-3">
+		<div class="component-headings">Job Descriptions</div>
+		<hr size="7px" class="mt-0" />
+		<div class="d-flex m-2 justify-content-between align-items-center">
+			<div class="page-size-chooser">
+				Items per page:
+				<select @bind="@pagination.ItemsPerPage">
+					<option>10</option>
+					<option>20</option>
+					<option>50</option>
+					<option>100</option>
+					<option>200</option>
+				</select>
+			</div>
+			<Button Class="btn-outline-primary m-2" @onclick="@AddJobLevel">Add new Job Description</Button>
+		</div>
+		<div>
+			<QuickGrid class="table-bordered" TGridItem="JobLevel" Items="jobDescriptions" Pagination="@pagination">
+
+				<PropertyColumn Property="@(p => p.Type)" Sortable="true"/>
+				<TemplateColumn>
+					<Button Class="btn-outline-primary" @onclick="()=>UpdateJobLevel(context)">Edit</Button>
+				</TemplateColumn>
+			</QuickGrid>
+			<Paginator State="@pagination" />
+		</div>
+	</div> *@
+
+	@* <div class="quickgrid-display-block  me-3">
+		<div class="component-headings">Jobs</div>
+		<hr size="7px" class="mt-0" />
+		<div class="d-flex m-2 justify-content-between align-items-center">
+			<div class="page-size-chooser">
+				Items per page:
+				<select @bind="@pagination.ItemsPerPage">
+					<option>10</option>
+					<option>20</option>
+					<option>50</option>
+					<option>100</option>
+					<option>200</option>
+				</select>
+			</div>
+			<div class="d-flex">
+			<Button Class="btn-outline-primary m-2" @onclick="@AddJobLevel">Add new Job Description</Button>
+			<Button Class="btn-outline-primary m-2" @onclick="@AddJob">Add New Job</Button>
+			</div>
+		</div>
+		<div>
+			<QuickGrid class="table-bordered" TGridItem="Job" Items="jobs" Pagination="@pagination">
+
+				<PropertyColumn Property="@(p => p.Description)" Sortable="true" />
+				<PropertyColumn Property="@(p => p.JobLevel.Type)" title="Job Description" Sortable="true" />
+				<TemplateColumn>
+					<Button Class="btn-outline-primary" @onclick="()=>UpdateJob(context)">Edit</Button>
+				</TemplateColumn>
+			</QuickGrid>
+			<Paginator State="@pagination" />
+		</div>
+	</div>
+</div> *@
+
+
+
+@code {
+	// [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+	PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+	//private EmployeeContext? _employeeContext;
+	private bool onlyNonAlloc = true;
+	private Employee? employee;
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		System.Globalization.CultureInfo.CurrentCulture = CultureInfo.InvariantCulture; 
+
+		//_employeeContext = await _employeecontextfactory.CreateDbContextAsync();
+
+
+	}
+
+
+
+
+	IQueryable<Employee> employees
+	{
+
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<Employee>>("api/Employees"));
+				t.Wait();
+				return t.Result.AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+
+		}
+
+	}
+
+
+	IQueryable<Job> jobs
+	{
+
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<Job>>("api/Jobs"));
+				t.Wait();
+				return t.Result.AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+
+		}
+
+	}
+
+	private async Task AddEmployee()
+	{
+		await ModalService.Show<EmployeeModal>("New Employee").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task AddJobLevel()
+	{
+		await ModalService.Show<JobTitleModal>("New Job Description").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+	private async Task AddJob()
+	{
+
+		ModalParameters parameters = new ModalParameters();
+		await ModalService.Show<JobModal>("New Job", parameters).Result;
+		await InvokeAsync(StateHasChanged);
+	}
+	private async Task UpdateEmployee(Employee item)
+	{
+		ModalParameters parameters = new ModalParameters().Add(nameof(EmployeeModal.employee), item);
+		await ModalService.Show<EmployeeModal>("Edit Employee", parameters).Result;
+		await InvokeAsync(StateHasChanged);
+	}
+	// private async Task UpdateJobLevel(JobLevel item)
+	// {
+	// 	ModalParameters parameters = new ModalParameters().Add(nameof(JobTitleModal.jobLevel), item);
+	// 	await ModalService.Show<JobTitleModal>("Edit Job Description", parameters).Result;
+	// 	await InvokeAsync(StateHasChanged);
+	// }
+
+	private async Task Update(Employee item)
+	{
+		ModalParameters parameters = new ModalParameters().Add(nameof(EmployeeModal.employee), item);
+		var result = await ModalService.Show<EmployeeModal>("Edit Employee", parameters).Result;
+        if (result == ModalResult.Ok())
+        {
+            
+        }
+		await InvokeAsync(StateHasChanged);
+	}
+
+	// private async Task UpdateJob(Job item)
+	// {
+	// 	ModalParameters parameters = new ModalParameters().Add(nameof(JobModal.job), item);
+	// 	await ModalService.Show<JobTitleModal>("Edit Job", parameters).Result;
+	// 	await InvokeAsync(StateHasChanged);
+	// }
+
+	private async Task Add()
+	{
+		await ModalService.Show<EmployeeModal>("New Employee").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private  void updateMNID(long currentAllocationID, ChangeEventArgs b)
+	{
+	// 	using (var _allocationContext = await _ctxFactory.CreateDbContextAsync())
+	// 	{
+
+	// 		var currentAllocation = _allocationContext.Allocations.Find(currentAllocationID);
+	// 		var locator = _allocationContext.Locators.Find(Convert.ToUInt32(b.Value));
+	// 		var point = _allocationContext.ChargingPoints.ToList();
+	// 		var Locators = _allocationContext.Locators.ToList();
+	// 		var employees = _allocationContext.Employees.ToList();
+	// 		var previousallocs = _allocationContext.Allocations.ToList().Where(s => s.Locator == locator && s.endDate == null).OrderBy(s => s.AllocationDate);
+	// 		if (previousallocs.Any())
+	// 		{
+
+	// 			foreach (Allocation aloc in previousallocs)
+	// 			{
+	// 				var update = _allocationContext.Allocations.Find(aloc.Id);
+	// 				update.endDate = DateTime.Now;
+	// 				_allocationContext.Update(update);
+	// 				//Add allocation for Point/MNID where employee = null sp that MNID is still allocated to charging rack ////THIS SHOULD ONLY COME INTO PLAY IF EMPLOYEE IS MOVED
+
+	// 				Allocation replace = new()
+	// 					{
+	// 						ChargingPoint = update.ChargingPoint,
+	// 						Locator = null,
+	// 						Employee = update.Employee,
+	// 						AllocatedBy = "replacement_for_chargingpoint_NULL MNID",
+	// 						AllocationDate = DateTime.Now
+	// 					};
+	// 				_allocationContext.Add(replace);
+	// 			}
+	// 		}
+
+	// 		////set the current allocation's end date to null
+	// 		currentAllocation.endDate = DateTime.Now;
+	// 		_allocationContext.Update(currentAllocation);
+
+	// 		Allocation temp = new()
+	// 			{
+	// 				ChargingPoint = currentAllocation.ChargingPoint,
+	// 				Locator = locator,
+	// 				Employee = currentAllocation.Employee,
+	// 				AllocatedBy = "New_MNID_employee",
+	// 				AllocationDate = DateTime.Now
+	// 			};
+	// 		try
+	// 		{
+	// 			_allocationContext.Add(temp);
+	// 			await _allocationContext.SaveChangesAsync();
+	// 			await InvokeAsync(StateHasChanged);
+	// 		}
+	// 		catch (Exception e)
+	// 		{
+	// 			_logger.LogError("Employees.Razor");
+	// 			_logger.LogError(e.ToString());
+	// 		}
+	// 	}
+	 }
+
+
+	private void updatePoint(long? currentAllocationID, ChangeEventArgs b, Employee employee)
+	{
+		// using (var _allocationContext = await _ctxFactory.CreateDbContextAsync())
+		// {
+
+
+		// 	var point = _allocationContext.ChargingPoints.Find(b.Value);
+		// 	var Locators = _allocationContext.Locators.ToList();
+		// 	var employees = _allocationContext.Employees.ToList();
+		// 	Locator? oldPointLocator = new();
+		// 	var previousallocs = _allocationContext.Allocations.ToList().Where(s => s.ChargingPoint == point && s.endDate == null).OrderBy(s => s.AllocationDate);
+		// 	if (previousallocs.Any())
+		// 	{
+
+		// 		foreach (Allocation aloc in previousallocs)
+		// 		{
+		// 			var update = _allocationContext.Allocations.Find(aloc.Id);
+		// 			if (update != null)
+		// 			{
+		// 				update.endDate = DateTime.Now;
+		// 				_allocationContext.Update(update);
+		// 				Allocation replace = new()
+		// 					{
+		// 						ChargingPoint = null,
+		// 						Locator = update.Locator,
+		// 						Employee = update.Employee,
+		// 						AllocatedBy = "replacement_for_chargingpoint_NULL Charging Point",
+		// 						AllocationDate = DateTime.Now
+		// 					};
+		// 				_allocationContext.Add(replace);
+		// 				oldPointLocator = update.Locator;
+		// 			}
+
+
+		// 			//Add allocation for Point/MNID where employee = null sp that MNID is still allocated to charging rack ////THIS SHOULD ONLY COME INTO PLAY IF EMPLOYEE IS MOVED
+
+
+		// 		}
+		// 	}
+
+		// 	////set the current allocation's end date to null
+		// 	var oldEmpAllocation = _allocationContext.Allocations.Find(currentAllocationID);
+		// 	if (oldEmpAllocation != null)
+		// 	{
+		// 		oldEmpAllocation.endDate = DateTime.Now;
+		// 		_allocationContext.Update(oldEmpAllocation);
+		// 		var tempEmp = _allocationContext.Employees.Find(employee.EmployeeCode);
+		// 		Allocation temp = new()
+		// 			{
+		// 				ChargingPoint = point,
+		// 				Locator = oldPointLocator,
+		// 				Employee = tempEmp,
+		// 				AllocatedBy = "New_Point_employee",
+		// 				AllocationDate = DateTime.Now
+		// 			};
+		// 		_allocationContext.Add(temp);
+		// 	}
+		// 	else
+		// 	{
+		// 		var tempEmp = _allocationContext.Employees.Find(employee.EmployeeCode);
+		// 		Allocation temp = new()
+		// 			{
+		// 				ChargingPoint = point,
+		// 				Employee = tempEmp,
+		// 				AllocatedBy = "New_Point_employee",
+		// 				AllocationDate = DateTime.Now
+		// 			};
+		// 		_allocationContext.Add(temp);
+		// 	}
+		// 	try
+		// 	{
+			
+		// 		await _allocationContext.SaveChangesAsync();
+		// 		await InvokeAsync(StateHasChanged);
+		// 	}
+		// 	catch (Exception e)
+		// 	{
+		// 		_logger.LogError("Employees.Razor");
+		// 		_logger.LogError(e.ToString());
+		// 	}
+		// 	await InvokeAsync(StateHasChanged);
+		// }
+	}
+
+}

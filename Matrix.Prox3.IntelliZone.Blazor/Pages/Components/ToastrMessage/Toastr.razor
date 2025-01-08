@@ -1,0 +1,91 @@
+﻿@inject IJSRuntime jscript
+
+<div class="toast-container top-0 end-0 p-3">
+    <div id="@elemID" @ref="toastRef" class="toast fade border-2 @toast?.ToastDisplay?.BorderClass" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
+        <div class="toast-header @toast?.ToastDisplay?.DisplayClass">
+            <span class="fa @toast?.ToastDisplay?.LevelClass fa-xl me-auto"></span>
+            <strong class="me-auto">@toast?.Title</strong>
+            <small class="text-muted">@toast?.TimeStamp.ToString("g")</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            @toast?.Message
+        </div>
+    </div>
+</div>
+
+<script>
+    function ShowToasts(toastElement) {
+        if (!toastElement) {
+            console.error("Toast element is null or undefined.");
+            return;
+        }
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+</script>
+
+@code {
+    ElementReference toastRef;
+
+    [Parameter]
+    public OurToastModel? toast { get; set; }
+
+    string defDisplayClass = "bg-info"; 
+    string defLevelClass = "text-white"; 
+    string defBorderClass = "border-info"; 
+
+    public string elemID { get; set; } = "Toast-" + Guid.NewGuid().ToString();
+
+    public class OurToastModel
+    {
+        public string? Title { get; set; }
+        public string? Message { get; set; }
+        public DateTime TimeStamp { get; set; }
+        public ToastDisplaySettings? ToastDisplay { get; set; }
+    }
+
+    public enum MsgLevels
+    {
+        Success,
+        Warning,
+        Error,
+        Info,
+        Confirm
+    }
+
+    public class ToastDisplaySettings
+    {
+        public string? DisplayClass { get; set; }
+        public string? LevelClass { get; set; }
+        public string? BorderClass { get; set; }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            
+            toast ??= new OurToastModel()
+                {
+                    Title = "Default Title",
+                    Message = "Default Message",
+                    TimeStamp = DateTime.Now,
+                    ToastDisplay = new ToastDisplaySettings()
+                    {
+                        DisplayClass = defDisplayClass,
+                        LevelClass = defLevelClass,
+                        BorderClass = defBorderClass
+                    }
+                };
+        }
+    }
+
+    public async Task ShowToastr()
+    {
+        
+        StateHasChanged();
+        await Task.Delay(50); 
+        await jscript.InvokeVoidAsync("ShowToasts", toastRef);
+    }
+}

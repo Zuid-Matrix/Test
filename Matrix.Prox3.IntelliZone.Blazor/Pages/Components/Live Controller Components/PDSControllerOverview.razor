@@ -1,0 +1,105 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Microsoft.EntityFrameworkCore
+@using System.Threading.Tasks
+@using System.Drawing
+@using System.Data
+
+
+
+<div class="w-100 m-0">
+				
+
+	@if (Controller != null)
+	{
+	
+				<div class="controller-block info-black rounded-xl">
+					<div class="info-display-block-33">
+						<InfoBlockNumber header="@Controller.MachineName" message="@Controller.IP"> </InfoBlockNumber>
+					</div>
+					@if (ControllerReport != null)
+					{
+						@if (ControllerReport.ConnectionInfo == true)
+						{
+							<div class="info-block info-green">					
+							<InfoBlockNumber header="Connection Status" message="Connected"> </InfoBlockNumber>
+							</div>
+
+								@if (ControllerReport.DiagnosticData != null && ControllerReport.DiagnosticData.sys_status == ProxDiagStatus.DIAG_PASS)
+								{
+									<div class="info-block info-green">
+										<InfoBlockNumber header="Diagnostic Status" message="@Convert.ToString(ControllerReport.DiagnosticData.sys_status)"> </InfoBlockNumber>
+									</div>
+								}
+								else if (ControllerReport.DiagnosticData != null && ControllerReport.DiagnosticData.sys_status == ProxDiagStatus.DIAG_FAIL)
+								{
+									<div class="info-block info-red">
+										<InfoBlockNumber header="Diagnostic Status" message="@Convert.ToString(ControllerReport.DiagnosticData.sys_status)"> </InfoBlockNumber>
+									</div>
+								}
+								else if (ControllerReport.DiagnosticData != null && ControllerReport.DiagnosticData.sys_status == ProxDiagStatus.DIAG_WARN)
+								{
+									<div class="info-block info-warn">
+										<InfoBlockNumber header="Diagnostic Status" message="@Convert.ToString(ControllerReport.DiagnosticData.sys_status)"> </InfoBlockNumber>
+									</div>
+								}
+
+								if(ControllerReport.currentAngle != 0)
+								{
+									<div class="info-block info-grey">
+										<InfoBlockNumber header="Current Angle" message="@(((float)ControllerReport.currentAngle).ToString("00.00"))"> </InfoBlockNumber>
+									</div>
+								}
+								if (ControllerReport.ProxTalkMachineData.machine_io_group.Any())
+								{
+									<div class="io-in-block">
+							<IOBlock io="@ControllerReport.ProxTalkMachineData.machine_io_group[0]"> </IOBlock>
+									</div>
+								}
+
+								if (ControllerReport.ProxTalkMachineData.machine_io_group.Any())
+								{
+									<div class="io-out-block">
+							<IOBlock io="@ControllerReport.ProxTalkMachineData.machine_io_group[2]"> </IOBlock>
+									</div>
+								}
+
+						}
+						else
+						{
+							<div class="info-block info-red">
+								<InfoBlockNumber header="Connection Status" message="Disconnected"> </InfoBlockNumber>
+							</div>
+						}
+
+
+
+					}
+					else
+					{
+						<div class="info-block info-red">
+							<InfoBlockNumber header="Connection Status" message="Disconnected"> </InfoBlockNumber>
+						</div>
+					}
+
+				</div>
+
+					
+	}	
+					
+</div>
+
+	
+
+
+
+@code {
+
+
+	[Parameter]
+	public MatrixDevice Controller { get; set; }
+
+	[Parameter]
+	public BlazorControllerReport? ControllerReport { get; set; }
+
+
+}

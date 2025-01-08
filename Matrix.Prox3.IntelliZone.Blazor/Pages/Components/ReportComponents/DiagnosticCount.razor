@@ -1,0 +1,136 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@* Number of Shutdowns *@
+<div id="shutdowns0" class="d-block d-lg-flex graph-category-block ">
+	@if (level == 1)
+	{
+		
+			<div class="col-md-9">
+				@if (chartTypeBar == false)
+				{
+			
+				<MatrixLine TopN="@TopN" SumValues=false Interval="@Interval" Title="Number of Diagnostic Events" Label="Count" events="diagnosticEvents.Where(s => s.eventDuration != null ).Select(s => new MatrixGeneralChartData{ Category = s.Package.Machine.Section.SectionName, SubCategory = s.DiagnosticSubModule, value = (decimal)s.eventDuration, Date = s.Converted_Time.Date , Color= s.Package.Machine.Section.Color}).ToList()" />
+				}
+				else
+				{
+
+				<Bar SumValues="false" TopN="@TopN" Interval="@Interval" Title="Number of Diagnostic Events" Label="Count" events="diagnosticEvents.Where(s => s.eventDuration != null ).Select(s => new MatrixGeneralChartData{ Category = s.Package.Machine.Section.SectionName, SubCategory = s.DiagnosticSubModule, value = (decimal)s.eventDuration, Date = s.Converted_Time.Date , Color= s.Package.Machine.Section.Color}).ToList()" />
+
+				}
+			</div>
+			<div class="col-md-3">
+				<div>
+					<Pie
+					TopN=@TopN
+					Title="Number of Diagnostic Events"
+					Label="Count"
+					events="diagnosticEvents.GroupBy(s =>
+					s.Package.Machine.Section.SectionName).Select(s => new MatrixPieChartData{
+					Category = s.Key,
+					value=s.Count(),
+					Color = s.FirstOrDefault(x=>x.Package.Machine.Section.SectionName == s.Key).Package.Machine.Section.Color
+					}).ToList()" />
+				</div>
+			</div>
+		
+	}
+	else if( level == 2)
+	{
+
+	
+			<div class="col-md-9">
+				@if (chartTypeBar == false)
+				{
+				<MatrixLine TopN="@TopN" SumValues="false" Interval="@Interval" Title="Number of Diagnostic Events" Label="Count" events="diagnosticEvents.Where(s => s.eventDuration != null ).Select(s => new MatrixGeneralChartData{ Category = s.Package.Machine.MachName, SubCategory = s.DiagnosticSubModule, value = (decimal)s.eventDuration, Date = s.Converted_Time.Date }).ToList()" />
+
+				}
+				else
+				{
+				<Bar SumValues="false" TopN="@TopN" Interval="@Interval" Title="Number of Diagnostic Events" Label="Count" events="diagnosticEvents.Where(s => s.eventDuration != null ).Select(s => new MatrixGeneralChartData{ Category = s.Package.Machine.MachName, SubCategory = s.DiagnosticSubModule, value = (decimal)s.eventDuration, Date = s.Converted_Time.Date }).ToList()" />
+
+				}
+			</div>
+		<div class="col-md-3">
+			<div>
+				<Pie
+					 TopN=@TopN
+					 Title="Number of Diagnostic Events"
+					 Label="Count"
+					 events="diagnosticEvents.GroupBy(s =>
+					s.Package.Machine.MachName).Select(s => new MatrixPieChartData{
+					Category = s.Key,
+					value=s.Count(),
+				Color = s.FirstOrDefault(x=>x.Package.Machine.MachName == s.Key).Package.Machine.Color
+					}).ToList()" />
+			</div>
+		</div>
+		
+
+	}
+	else if (level == 4)
+	{
+
+
+		<div class="col-md-9">
+			@if (chartTypeBar == false)
+			{
+				<MatrixLine TopN="@TopN"  SumValues="false" Interval="@Interval" Title="Number of Diagnostic Events" Label="Count" events="diagnosticEvents.Where(s => s.eventDuration != null ).Select(s => new MatrixGeneralChartData{ Category = s.DiagnosticSubModule, SubCategory = s.DiagnosticMessage, value = (decimal)s.eventDuration, Date = s.Converted_Time.Date }).ToList()" />
+
+			}
+			else
+			{
+				@* Number of diagnostic Events *@
+				<Bar SumValues="false" TopN="@TopN" Interval="@Interval" Title="Number of Diagnostic Events" Label="Count" events="diagnosticEvents.Where(s => s.eventDuration != null ).Select(s => new MatrixGeneralChartData{ Category = s.DiagnosticSubModule, SubCategory = s.DiagnosticSubModule, value = (decimal)s.eventDuration, Date = s.Converted_Time.Date }).ToList()" />
+
+			}
+		</div>
+		<div class="col-md-3">
+			<div>
+				<Pie
+					 TopN=@TopN
+					 Title="Number of Diagnostic Events by D"
+					 Label="Count"
+					 events="diagnosticEvents.GroupBy(s =>
+					s.DiagnosticSubModule).Select(s => new MatrixPieChartData{
+					Category = s.Key,
+					value=s.Count()
+					}).ToList()" />
+			</div>
+
+		</div>
+
+
+	}
+</div>
+
+
+@code {
+
+	private PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+	private System.Threading.Timer? timer; // NOTE: THIS LINE OF CODE ADDED
+
+
+	[Parameter]
+	public List<EventlogReport>? diagnosticEvents { get; set; }
+
+	[Parameter]
+	public int? TopN { get; set; }
+
+	[Parameter]
+	public int Interval { get; set; }
+
+	[Parameter]
+	public bool chartTypeBar { get; set; }
+
+	/// <summary>
+	/// 0 = mines
+	/// 1 = sections
+	/// 2 = machines
+	/// 3 = MNIDs
+	/// 4 = Diagnostic Type
+	/// </summary>
+	[Parameter]
+	public int level { get; set; }
+
+
+
+}

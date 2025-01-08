@@ -1,0 +1,333 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Matrix.Prox3.IntelliZone.Data.Reporting
+@using MudBlazor
+@using Matrix.Prox3.IntelliZone.Data.Models.Reporting
+@inject ILogger<UploadDataModal> _logger
+
+<body class="w-100 m-0">
+
+
+@* 	@using (ProxLocalConnectionContext ctx = ctxFactory.CreateDbContext())
+	{
+		<div class="d-flex mb-1 justify-content-between">
+			<div class="fw-bolder col-3">Report Name:</div>
+			@if (BlazoredModal.Title.Contains("Edit"))
+			{
+						<InputSelect class="form-select"
+						 TValue="int"
+						 Value="@tempReport.id"
+						 ValueChanged="UpdateReport"
+						 ValueExpression="@(() => tempReport.id)">
+				<option selected value="@tempReport.id">@tempReport.name</option>
+				@using (ProxLocalConnectionContext ctx2 = ctxFactory.CreateDbContext())
+				{
+					@foreach (var option in ctx2.AutomatedReports)
+					{
+						<option value="@option.id"> @option.description</option>
+					}
+				}
+			</InputSelect>
+						<CascadingAuthenticationState>
+			<AuthorizeView>
+					<Authorized>
+				<Button Type="BlazorBootstrap.ButtonType.Submit" Active=false class="btn-outline-success" @onclick="AddReport">New Report</Button>
+			</Authorized>	
+			</AuthorizeView>
+			</CascadingAuthenticationState>
+			}
+			else
+			{
+				
+				<InputText class="form-control" @bind-Value=tempReport.name></InputText>
+			}
+		
+	
+		</div>
+		<div class="d-flex mb-1 justify-content-between">
+			<div class="fw-bolder col-3">Output:</div>
+		<InputSelect class="form-select" @bind-Value="tempReport.outputType">
+			<option selected value="@tempReport.outputType">@tempReport.outputType</option>
+			@using (ProxLocalConnectionContext ctx2 = ctxFactory.CreateDbContext())
+			{
+
+				<option value="@ReportOutput.EXCEL"> @ReportOutput.EXCEL</option>
+				<option value="@ReportOutput.PDF"> @ReportOutput.PDF</option>
+				
+			}
+		</InputSelect>
+		</div>
+		<div class="d-flex mb-1 justify-content-between">
+			<div class="fw-bolder col-3">Description:</div>
+			<InputText class="form-control" @bind-Value="tempReport.description" />
+		</div>
+		<div class="d-flex mb-1 justify-content-between">
+			<div class="fw-bolder col-3">Time to Generate:</div>
+			
+	
+		<MudHidden Breakpoint="@Breakpoint.Xs">
+			<MudTimePicker PickerVariant="PickerVariant.Static" Color="MudBlazor.Color.Dark" Orientation="MudBlazor.Orientation.Landscape" @bind-Time="_time" />
+		</MudHidden>
+		</div>
+
+
+
+		<div class="d-flex mb-1 justify-content-between">
+			<div class="fw-bolder col-3">Day of Week:</div>
+			<InputNumber class="form-control" @bind-Value="tempReport.DayOfWeek" />
+		</div>
+
+		
+		<div class="d-flex mb-1 justify-content-between">
+			<div class="fw-bolder col-3">Day of Month:</div>
+			<InputNumber class="form-control" @bind-Value="tempReport.DayofMonth"/>
+		</div>
+
+		<div class="d-flex mb-1 justify-content-between">
+			<div class="fw-bolder col-3">Duration/Span:</div>
+			<InputNumber class="form-control" @bind-Value="tempReport.Duration" />
+		</div>
+
+		<div class="d-flex mb-1 justify-content-between">
+			<div class="fw-bolder col-3">Sheets:</div>
+				<InputSelect class="form-control"
+							 TValue="int[]"
+							 Value="@SelectedSheets"
+							 ValueChanged="UpdateSheets"
+							 ValueExpression="@(() => SelectedSheets)">
+					@foreach (var (selected, sheet) in CurrentSheets)
+					{
+						<option selected="@selected" value="@(sheet.Id)">@(sheet.name)</option>
+					}
+				</InputSelect>
+
+			
+		</div>
+
+		<div class="d-flex mb-1 justify-content-between">
+			<div class="fw-bolder col-3">Active:</div>
+			<InputCheckbox class="me-2" @bind-Value=tempReport.active/>
+		</div>
+
+	
+
+
+		<div class="d-flex mb-1 justify-content-center">
+			<MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Save"  Color="Color.Success" Class="me-2" @onclick="Update">
+				@if (BlazoredModal.Title.Contains("Edit"))
+				{
+					<div>Update Report</div>
+				}
+				else
+				{
+					<div>Add Report</div>
+				}
+			</MudButton>
+			
+				@if (BlazoredModal.Title.Contains("Edit"))
+				{
+				<CascadingAuthenticationState>
+					<AuthorizeView>
+						<Authorized>
+							<MudButton Variant="Variant.Outlined" DropShadow="true" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" @onclick="Delete">Delete</MudButton>
+						</Authorized>
+					</AuthorizeView>
+				</CascadingAuthenticationState>
+				
+				}
+
+			
+
+		</div>
+		
+	}
+ *@
+
+
+
+</body>
+
+	
+
+
+
+@code {
+
+	[CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+
+	public int[]? SelectedSheets{ get; set; } = [];
+	private List<(bool, SheetOption)>? CurrentSheets = new List<(bool, SheetOption)>();
+
+	private TimeSpan? _time = new TimeSpan(13, 37, 00);
+
+	public Report? tempReport = new();
+	public string uplodadedby = "";
+	protected override async Task OnInitializedAsync()
+	{
+
+		if (tempReport == null)
+		{
+			tempReport = new();
+		}
+		// using (var ctx = await ctxFactory.CreateDbContextAsync())
+		// {
+		// 	foreach (var sheet in ctx.ExcelSheets)
+		// 	{
+		// 		CurrentSheets.Add((false, sheet));
+		// 	}
+		// }
+
+	}
+
+	private async Task Close() => await BlazoredModal.CloseAsync();
+
+
+	private async Task UpdateSheets(int[] e)
+	{
+
+
+		SelectedSheets = e;
+
+
+
+
+	}
+
+	private async Task UpdateReport(int id)
+	{
+
+
+
+
+		// using (var ctx = await ctxFactory.CreateDbContextAsync())
+		// {
+
+
+		// 	tempReport = ctx.AutomatedReports.Include(s=> s.sheets).FirstOrDefault(s=> s.id == id );
+
+
+		// 	SelectedSheets = tempReport.sheets.Select(s => s.Id).ToArray();
+		// 	_time = tempReport.TimeOfDay.ToTimeSpan();
+
+		// }
+		await InvokeAsync(StateHasChanged);
+
+
+	}
+
+
+
+
+	private async Task AddReport()
+	{
+		var options = new ModalOptions()
+			{
+				Size = Blazored.Modal.ModalSize.Large
+			};
+		await ModalService.Show<ReportModal>("New Report", options).Result;
+		await InvokeAsync(StateHasChanged);
+		await Close();
+	}
+
+
+	private async Task Update()
+	{
+		// using (var ctx = await ctxFactory.CreateDbContextAsync())
+		// {
+
+		// 	List<SheetOption> sheets = new();
+		// 	if (SelectedSheets.Count() > 0)
+		// 	{
+		// 		foreach (var item in SelectedSheets)
+		// 		{
+		// 			sheets.Add(await ctx.ExcelSheets.FindAsync(item));
+		// 		}
+		// 		//tempReport = await ctx.AutomatedReports.FindAsync(tempReport.id);
+		// 		//if (tempReport )
+		// 		tempReport.sheets = sheets;
+		// 		tempReport.TimeOfDay = TimeOnly.FromTimeSpan((TimeSpan)_time);
+
+		// 		if (BlazoredModal.Title.Contains("Edit"))
+		// 		{
+		// 			ctx.AutomatedReports.Update(tempReport);
+		// 			await ctx.SaveChangesAsync();
+		// 			await Close();
+		// 		}
+		// 		else
+		// 		{
+
+		// 			try
+		// 			{
+		// 				ctx.AutomatedReports.Add(tempReport);
+		// 				await ctx.SaveChangesAsync();
+		// 				await Close();
+		// 			}
+		// 			catch (Exception e)
+		// 			{
+		// 				Console.WriteLine(e);
+
+		// 			}
+		// 		}
+		// 	}
+		// 	else
+		// 	{
+		// 		ModalParameters message = new ModalParameters().Add(nameof(PopupMessage.BodyText), $" Please select at least one sheet for the report.");
+		// 		await ModalService.Show<PopupMessage>("Unable to update/add report", message).Result;
+		// 		await InvokeAsync(StateHasChanged);
+		// 	}
+
+
+
+		
+
+
+				
+
+				
+				
+				
+			
+
+		// }
+
+	}
+
+
+
+	private async Task Delete()
+	{
+		// using (var ctx = await ctxFactory.CreateDbContextAsync())
+		// {
+
+		
+
+		// 		try
+		// 		{
+		// 			ctx.AutomatedReports.Remove(tempReport);
+		// 			await ctx.SaveChangesAsync();
+		// 			await Close();
+		// 		}
+		// 		catch (Exception e)
+		// 		{
+		// 			Console.WriteLine(e);
+
+		// 		}
+			
+
+
+
+
+
+
+
+
+
+
+
+
+		// }
+
+	}
+
+
+}

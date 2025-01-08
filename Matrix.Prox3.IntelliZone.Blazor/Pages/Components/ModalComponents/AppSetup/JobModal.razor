@@ -1,0 +1,170 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using MudBlazor.Utilities
+@using MudBlazor
+@inject HttpClient http
+@inject ILogger<JobModal> logger
+
+<body class="w-100 m-0">
+
+
+	@if (job != null)
+	{
+
+		<div class="mb-1 d-flex justify-content-between">
+			<div class="fw-bolder col-6">Name:</div>	<div class="col-6">
+				<InputText class="form-control" type="text" @bind-Value="job.Description" /></div>
+		</div>
+
+		<div class="d-flex mb-1 justify-content-between">
+			<div class="fw-bolder col-6">JobTitle:</div>
+			@if (titleProvided)
+			{
+				<div class="col-6">
+					<InputText Disabled class="form-control" type="text" @bind-Value="job.JobLevel.Type" />
+				</div>
+			}
+			else
+			{
+				<InputSelect class="form-select" @bind-Value="job.JobLevel.Type">
+					<option selected value="@job.JobLevel.Type">@job.JobLevel.Type</option>
+
+					@foreach (var option in jobDescriptions)
+					{
+						<option value="@option.Type"> @option.Type</option>
+					}
+
+				</InputSelect>
+				<Button Type="BlazorBootstrap.ButtonType.Submit" Active=false class="btn-outline-success" @onclick="@AddRoleCategory">New..</Button>
+			}
+
+		</div>
+
+
+
+		<div class="d-flex flex-row p-3 justify-content-center">
+
+			<Button Type="BlazorBootstrap.ButtonType.Submit" Active=false class="btn-outline-success" @onclick="Add">
+				@if (BlazoredModal.Title.Contains("Edit"))
+				{
+					<div>Update</div>
+				}
+				else
+				{
+					<div>Add</div>
+				}
+			</Button>
+
+		</div>
+
+	}	
+
+</body>
+
+
+
+
+
+@code {
+
+	[CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+
+
+
+	[Parameter]
+	public Job? job { get; set; }
+
+	IQueryable<JobLevel> jobDescriptions2  { get; set; }
+
+	private bool titleProvided = false;
+
+	IQueryable<JobLevel> jobDescriptions
+	{
+
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<JobLevel>>("api/JobLevels"));
+				t.Wait();
+				return t.Result.AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+
+		}
+
+	}
+
+
+
+	protected override async Task OnInitializedAsync()
+	{
+
+		if (job == null)
+		{
+			job = new();
+			job.JobLevel = new();
+		}
+		else 
+		{
+
+			if ((job.JobLevel != null))
+			{
+				titleProvided = true;
+			}
+		}
+
+	}
+
+	private void ChangeColor(ChangeEventArgs e)
+	{
+
+	}
+
+	private async Task AddRoleCategory()
+	{
+		await ModalService.Show<JobTitleModal>("New Job Description").Result;
+		try
+		{
+			var t = Task.Run(async () => await http.GetFromJsonAsync<List<JobLevel>>("api/JobLevels"));
+			t.Wait();
+			//jobDescriptions = t.Result.ToList();
+		}
+		catch
+		{
+			logger.LogError("Unable to retrieve new job descriptions");
+		}
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task Close() => await BlazoredModal.CloseAsync();
+
+	private async Task Add()
+	{
+		try
+		{
+
+			var t = await http.PostAsJsonAsync<Job>("api/Jobs", job);
+			if (t.IsSuccessStatusCode)
+			{
+				await Close();
+			}
+			else
+			{
+				ModalParameters message = new ModalParameters().Add(nameof(PopupMessage.BodyText), $"Status Code: {t.StatusCode} - {t.Content}");
+				ModalService.Show<PopupMessage>("Could not create/update Job Description", message);
+			}
+
+			await Close();
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine(e);
+		}
+
+	}
+
+}

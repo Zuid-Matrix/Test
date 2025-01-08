@@ -1,0 +1,119 @@
+.navbar-toggler[b-t402rx79b9] {
+    background-Color: rgba(255, 255, 255, 0.1);
+}
+
+.top-row[b-t402rx79b9] {
+    height: 5.5rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-brand[b-t402rx79b9] {
+    font-size: 1.1rem;
+}
+
+
+btn.navbar[b-t402rx79b9] {
+    background-Color: transparent;
+
+}
+
+.oi[b-t402rx79b9] {
+    width: 2rem;
+    font-size: 1.1rem;
+    vertical-align: text-top;
+    top: -2px;
+}
+
+.nav-item[b-t402rx79b9] {
+    display: flex !important;
+    position: relative !important;
+    width: 100% !important;
+    margin-bottom: 0.5rem !important;
+    transition: transform 0.3s ease;
+}
+
+.nav-item-content[b-t402rx79b9] {
+    display: flex;
+    align-items: center;
+    width: 100%; /* Ensure the content takes the full width */
+}
+
+    .nav-item-content img[b-t402rx79b9] {
+        margin-right: 5px; /* Adjust the margin as needed */
+    }
+
+.nav-item:hover .nav-item-content[b-t402rx79b9],
+.nav-item[b-t402rx79b9]  a:hover,
+.nav-item[b-t402rx79b9]  .nav-link:hover {
+    background-Color: white !important; /* Ensure background is white on hover */
+    border-radius: 5px;
+    padding: 5px; /* Add padding to ensure the hover effect covers the entire content */
+    Color: black !important; /* Ensure text Color is black on hover */
+}
+
+    .nav-item:hover .nav-item-content img[b-t402rx79b9],
+    .nav-item:hover .nav-item-content span[b-t402rx79b9] {
+        Color: black !important; /* Ensure text Color is black on hover */
+        filter: none; /* Remove any filter on hover */
+    }
+
+.nav-L1[b-t402rx79b9] {
+    font-weight: bold;
+}
+
+.nav-L2[b-t402rx79b9] {
+    font-style: italic;
+}
+
+.nav-item[b-t402rx79b9]  a.active,
+.nav-item[b-t402rx79b9]  a:active,
+.nav-item[b-t402rx79b9]  a:focus,
+.nav-item[b-t402rx79b9]  .nav-link.active,
+.nav-item[b-t402rx79b9]  .nav-link:active,
+.nav-item[b-t402rx79b9]  .nav-link:focus {
+    background-Color: white !important; /* Ensure background is white when active */
+    Color: black !important; /* Ensure text Color is black when active */
+}
+
+
+.nav-item[b-t402rx79b9]  a:hover,
+.nav-item[b-t402rx79b9]  .nav-link:hover {
+    Color: black !important; /* Ensure text Color is black on hover */
+    background-Color: white !important;
+}
+
+.nav-item-icon[b-t402rx79b9] {
+    width: 2.5rem; /* Adjust the width as needed */
+    height: 2.5rem; /* Adjust the height as needed */
+    flex-shrink: 0; /* Prevent the icon from resizing */
+    margin: 0; /* Remove extra margins */
+    padding: 5px; /* Adjust padding if needed */
+    transition: transform 0.3s ease; /* Smooth scaling on hover */
+}
+
+    .nav-item-icon:hover[b-t402rx79b9] {
+        filter: none; /* Remove any filter on hover */
+    }
+
+.collapsedIcon[b-t402rx79b9] {
+    padding: 5px;
+    width: 3rem;
+    height: 6rem;
+    font-size: 1.5rem;
+
+}
+
+.navbar-toggler[b-t402rx79b9] {
+    display: flex;
+    align-items: center;
+    justify-items: center;
+}
+
+@media (min-width: 50px) {
+    .navbar-toggler[b-t402rx79b9] {
+        display: block;
+    }
+}

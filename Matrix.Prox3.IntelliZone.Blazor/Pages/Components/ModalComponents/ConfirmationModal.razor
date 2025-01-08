@@ -1,0 +1,32 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using System.ComponentModel.DataAnnotations
+<div>
+        <p>@Message</p>
+            @if (items != null)
+            {
+                <p>This affects the following items:</p>
+                @foreach(var item in items)
+                {
+                    <p>item</p>
+                }
+            }
+    <div class="d-flex flex-row p-3 justify-content-center">
+
+        <Button Type="ButtonType.Submit" Active=false class="btn-outline-success" @onclick="Confirm">Submit</Button>
+        <Button Type="ButtonType.Reset" Active=false class="btn-outline-danger" @onclick="Confirm">Cancel</Button>
+    
+     
+        </div>
+</div>
+
+@code {
+    
+
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public List<string>? items { get; set; }
+
+
+    private async Task Confirm() => await BlazoredModal.CloseAsync(ModalResult.Ok());
+    private async Task Cancel() => await BlazoredModal.CancelAsync();
+}

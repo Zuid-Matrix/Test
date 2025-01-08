@@ -1,0 +1,133 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+
+<body class="w-100 m-0">
+				
+
+	@if (Section != null)
+	{
+		@* @using (var ctx =ctxFactory.CreateDbContext())
+		{
+			<div class="mb-1 d-flex justify-content-between">
+				<div class="fw-bolder col-6">Name:</div>		<InputText class="form-label col-6" type="text" @bind-Value="Section.SectionName" />
+			</div>
+			<div class="d-flex mb-1 justify-content-between">
+				<div class="fw-bolder col-6">Mine:</div>
+				<InputSelect class="form-select" @bind-Value="Section!.Mine!.MineName">
+					<option selected value="@Section!.Mine!.MineName">@Section!.Mine!.MineName</option>
+					@using (ProxLocalConnectionContext ctx2 = ctxFactory.CreateDbContext())
+					{
+						@foreach (var option in ctx2.Mines)
+						{
+							<option value="@option.MineName"> @option.MineName</option>
+						}
+					} 
+				</InputSelect>
+				<Button Type="ButtonType.Submit" Active=false class="btn-outline-success" @onclick="@AddMine">New..</Button>
+			</div>
+			
+			<div class="d-flex flex-row p-3 justify-content-center">
+			
+				<Button Type="ButtonType.Submit" Active=false class="btn-outline-success" @onclick="Add">
+					@if (BlazoredModal.Title.Contains("Edit"))
+					{
+						<div>Update Section</div>
+					}
+					else
+					{
+						<div>Add Section</div>
+					}
+				</Button>
+					@* <Button class="btn-outline-D" @onclick="Close">Close</Button> 
+			</div>
+		} *@
+	}	
+					
+</body>
+
+	
+
+
+
+@code {
+
+	[CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+
+	[Parameter]
+	public Section? Section { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (Section == null)
+		{
+			Section = new();
+			Section.Mine = new();
+		}
+	}
+
+	private async Task AddMine()
+	{
+		await ModalService.Show<MineModal>("New Mine").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task Close() => await BlazoredModal.CloseAsync();
+
+	private async Task Add()
+	{
+		// using (var ctx = await ctxFactory.CreateDbContextAsync())
+		// {
+
+
+		// 	if (ctx.Sections.Find(Section!.SectionId) != null && !BlazoredModal!.Title!.Contains("Edit"))
+		// 	{
+		// 		ModalParameters message = new ModalParameters().Add(nameof(PopupMessage.BodyText), "Section already xist");
+		// 		ModalService.Show<PopupMessage>("Error", message);
+		// 	}
+		// 	else if (ctx.Mines.Find(Section!.Mine!.MineName) == null)
+		// 	{
+		// 		ModalParameters message = new ModalParameters().Add(nameof(PopupMessage.BodyText), "Mine cannot be NULL");
+		// 		ModalService.Show<PopupMessage>("Error", message);
+		// 	}
+		// 	else
+		// 	{
+		// 		Section.Mine = ctx.Mines.Find(Section!.Mine!.MineName);
+		// 		if (ctx.Sections.Find(Section.SectionId) == null)
+		// 		{
+
+		// 			try
+		// 			{
+		// 				ctx.Sections.Add(Section);
+		// 				await ctx.SaveChangesAsync();
+		// 				await Close();
+		// 			}
+		// 			catch (Exception e)
+		// 			{
+		// 				Console.WriteLine(e);
+		// 			}
+
+		// 		}
+		// 		else
+		// 		{
+		// 			var sectionToUpdate = ctx.Sections.Find(Section.SectionId);
+		// 			sectionToUpdate.Mine = ctx.Mines.Find(Section!.Mine!.MineName);
+		// 			try
+		// 			{
+		// 				ctx.Sections.Update(sectionToUpdate);
+		// 				await ctx.SaveChangesAsync();
+		// 				await Close();
+		// 			}
+		// 			catch (Exception e)
+		// 			{
+		// 				Console.WriteLine(e);
+		// 			}
+
+		// 		}
+
+		// 	}
+
+		// }
+
+	}
+
+}

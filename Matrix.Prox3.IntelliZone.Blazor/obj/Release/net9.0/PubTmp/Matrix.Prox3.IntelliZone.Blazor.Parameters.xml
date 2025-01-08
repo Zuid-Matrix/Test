@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<parameters>
+  <parameter name="IIS Web Application Name" description="" value="testing-intellizonereporting" tags="IisApp">
+    <parameterEntry kind="ProviderPath" scope="IisApp" match="^C:\\Users\\zuidera\\source\\repos\\DataSaint\\Matrix\.Prox3\.IntelliZone\\Matrix\.Prox3\.IntelliZone\.Blazor\\obj\\Release\\net9\.0\\PubTmp\\Out\\$" />
+  </parameter>
+</parameters>

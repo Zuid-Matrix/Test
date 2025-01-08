@@ -1,0 +1,26 @@
+.combining-block[b-g77nrtwp2y] {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}
+
+.locator-display-block[b-g77nrtwp2y] {
+    margin: 8px;
+    opacity: 0.8;
+    min-height: 300px;
+    width: 100%;
+    flex : 1;
+    text-align: center;
+    background-Color: lightgray;
+}
+.hover-row:hover[b-g77nrtwp2y] {
+    background-Color: #0000ff33;
+}
+
+.selected-row[b-g77nrtwp2y] {
+    background-Color: #0000ff77;
+}

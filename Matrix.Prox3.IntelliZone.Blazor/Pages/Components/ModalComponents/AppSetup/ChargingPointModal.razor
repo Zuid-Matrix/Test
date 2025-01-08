@@ -1,0 +1,105 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+		
+
+	@if (Point != null)
+	{
+		@* @using (var ctx =ctxFactory.CreateDbContext())
+		{
+		
+			<div class="mb-1 d-flex justify-content-between">
+				<div class="fw-bolder col-2">Name:</div>		<InputText class="form-control" type="text" @bind-Value="Point.PointName" />
+			</div>
+	@* 		<div class="mb-1 d-flex justify-content-between">
+				<div class="fw-bolder col-6">Number:</div>		<InputNumber class="form-label col-6" @bind-Value="Point.PointNumber" />
+			</div> 
+			
+			<div class="d-flex flex-row p-3 justify-content-center">
+				<Button Type="ButtonType.Submit" Active=false class="btn-outline-success" @onclick="Add">
+					@if (BlazoredModal.Title.Contains("Edit"))
+					{
+						<div>Update Chargin Point</div>
+					}
+					else
+					{
+						<div>Add Charing Point</div>
+					}
+				</Button>
+					@* <Button class="btn-outline-D" @onclick="Close">Close</Button> 
+			</div>
+		} *@
+	}	
+					
+
+
+	
+
+
+
+@code {
+
+	[CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+
+	[Parameter]
+	public ChargingPoint? Point { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (Point == null)
+		{
+			Point = new();
+		}
+	}
+
+
+
+	private async Task Close() => await BlazoredModal.CloseAsync();
+
+	private async Task Add()
+	{
+		// using (var ctx = await ctxFactory.CreateDbContextAsync())
+		// {
+
+		// 	if (await ctx.ChargingPoints.FindAsync(Point.PointName) == null)
+		// 	{
+		// 		try
+		// 		{
+		// 			Point.PointNumber = Convert.ToUInt32(Point.PointName);
+		// 		}
+		// 		catch
+		// 		{
+		// 			Console.WriteLine("Charging Point not a number");
+		// 		}
+
+		// 		try
+		// 		{
+
+		// 			Allocation alloc = new()
+		// 			{
+		// 				AllocationDate = DateTime.Now,
+		// 				ChargingPoint = Point,
+		// 				AllocatedBy = "ManuallyAdded"
+		// 			};
+		// 			ctx.ChargingPoints.Add(Point);
+		// 			ctx.Allocations.Add(alloc);
+		// 			ctx.ChargingPoints.OrderBy(s => s.PointNumber);
+		// 			await ctx.SaveChangesAsync();
+		// 				await Close();
+		// 			}
+		// 			catch (Exception e)
+		// 			{
+		// 				Console.WriteLine(e);
+		// 			}
+
+		// 		}
+		// 	else
+		// 	{
+		// 		ModalParameters message = new ModalParameters().Add(nameof(PopupMessage.BodyText), "Point already exist");
+		// 		ModalService.Show<PopupMessage>("Error", message);
+		// 	}
+
+		// }
+
+	}
+
+}

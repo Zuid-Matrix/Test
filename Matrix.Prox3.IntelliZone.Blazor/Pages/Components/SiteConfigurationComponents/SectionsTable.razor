@@ -1,0 +1,93 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Microsoft.EntityFrameworkCore
+@inject HttpClient http
+
+
+
+
+<div class="component-headings">Sections</div>
+
+<hr class="mt-0" />
+
+	<div class="m-2">
+		Items per page:
+		<select @bind="@pagination.ItemsPerPage">
+			<option value="10" selected>10</option>
+			<option value="20">20</option>
+			<option value="50">50</option>
+			<option value="100">100</option>
+			<option value="200">200</option>
+		</select>
+	</div>
+<button class="btn btn-outlineprimary" @onclick="@AddSection">Add new Section</button>
+<br />
+
+@if (sections != null)
+{
+	<QuickGrid Class="table" Items="sections" Pagination="@pagination">
+		<PropertyColumn Property="@(p => p.SectionName)" Title="Section" Sortable="true" />
+		<PropertyColumn Property="@(p => p.Mine.MineName)" Title="Mine" Sortable="true" />
+		<TemplateColumn Title="Colour">
+			<ChildContent Context="context">
+				<span class="dot" style="background-Color:@context.Color"></span>
+			</ChildContent>
+		</TemplateColumn>
+		<TemplateColumn>
+			<ChildContent Context="context">
+				<button class="btn btn-light" @onclick="()=>Update(context)">Edit</button>
+			</ChildContent>
+		</TemplateColumn>
+	</QuickGrid>
+	<Paginator State="@pagination" />
+}
+
+
+		
+
+@code {
+	[CascadingParameter] public IModalService Modal { get; set; } = default!;
+
+	PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+
+	IQueryable<Section> sections
+	{
+
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<Section>>("api/Sections"));
+				t.Wait();
+				return t.Result.AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+
+		}
+
+	}
+	
+
+
+
+	private async Task Update(Section item)
+	{
+		ModalParameters parameters = new ModalParameters().Add(nameof(SectionModal.section), item);
+		
+		await Modal.Show<SectionModal>("Edit Section", parameters).Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task AddSection()
+	{
+		await Modal.Show<SectionModal>("New Section").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+
+	
+}
+

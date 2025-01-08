@@ -1,0 +1,307 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Matrix.Prox3.IntelliZone.Data.Models.Reporting
+@implements IDisposable
+
+
+<div class="">
+    @* <h6 class="fw-bold text-uppecase">@Label</h6> *@
+    @if (busy == true || !events.Any())
+    {
+        <NoData />
+
+
+    }
+    <BarChart @ref="BarChart" Width="90" WidthUnit="Unit.Percentage" Class="mb-6 ms-3" />
+    <LineChart @ref="LineChart" Width="90" WidthUnit="Unit.Percentage" Class="mb-6 ms-3" />
+   
+</div>
+
+
+@code {
+
+    [Parameter]
+    public List<MatrixGeneralChartData> events { get; set; }
+
+    [Parameter]
+    public string Label { get; set; }
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter] public bool lineChart {get ; set;}
+
+    [Parameter]
+    public List<Section> Sections { get; set; }
+    [Parameter]
+    public int Interval { get; set; }
+    [Parameter]
+    public int[] SectionIDs { get; set; }
+
+
+    [Parameter]
+    public int? TopN { get; set; }
+
+    private bool busy = false;
+    private int _borderwidth = 2;
+    private Calendar cal = new CultureInfo("en-US").Calendar;
+    private BarChart BarChart = default!;
+    private BarChartOptions BarChartOptions = default!;
+    private LineChart LineChart = default!;
+    private LineChartOptions LineChartOptions = default!;
+    private ChartData chartData = default!;
+    private int MinValue = 10;
+    private int MaxValue = 1000;
+    private List<int> weeks = new();
+    private List<DateTime> days = new();
+    private List<int> months = new();
+    private List<int> years = new();
+    //private int datasetsCount = 0;
+    private int labelsCount = 0;
+
+
+    protected override  void OnInitialized()
+    {     
+        BarChartOptions = new BarChartOptions { Responsive = true, Interaction = new Interaction { Mode = InteractionMode.Index } };
+        BarChartOptions.Scales.Y.Title = new ChartAxesTitle { Text = Label, Display = true };
+        BarChartOptions.Plugins.Title.Text = Title;
+        BarChartOptions.Plugins.Title.Display = true;
+
+        LineChartOptions = new LineChartOptions { Responsive = true, Interaction = new Interaction { Mode = InteractionMode.Index } };
+        LineChartOptions.Scales.Y.Title = new ChartAxesTitle { Text = Label, Display = true };
+        LineChartOptions.Plugins.Title.Text = Title;
+        LineChartOptions.Plugins.Title.Display = true;
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            if (events.Any())
+            {
+                busy = true;
+                await InvokeAsync(StateHasChanged);
+                await GetDataSets();
+
+                if (lineChart)
+                    await LineChart.InitializeAsync(chartData, LineChartOptions);
+                else
+                    await BarChart.InitializeAsync(chartData, BarChartOptions);
+                busy = false;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+
+        busy = false;
+        await base.OnAfterRenderAsync(firstRender);
+
+    }
+
+    public void Dispose()
+    {
+
+    }
+
+
+
+
+
+    private async Task ShowHorizontalBarChartAsync()
+    {
+        BarChartOptions.IndexAxis = "y";
+        await BarChart.UpdateAsync(chartData, BarChartOptions);
+    }
+
+    private async Task ShowVerticalBarChartAsync()
+    {
+        BarChartOptions.IndexAxis = "x";
+        await BarChart.UpdateAsync(chartData, BarChartOptions);
+    }
+
+    private async Task GetDataSets()
+    {
+
+
+        List<MatrixChartDataString> tempdata = new();
+        List<ChartIndex> chartindexes = new();
+
+        if (Interval == 1)//weeks
+        {
+
+            foreach (var index in events.Select(s => cal.GetWeekOfYear((DateTime)s.Date, CalendarWeekRule.FirstDay, DayOfWeek.Monday)).Order().Distinct().ToList())
+            {
+                chartindexes.Add(new ChartIndex()
+                {
+                        display = $"Week {index}",
+                        no = index
+                });
+            }
+        }
+        else if (Interval == 2) //Month
+        {
+            foreach (var index in events.Select(s => ((DateTime)s.Date).Month).Distinct().Order().ToList())
+            {
+                chartindexes.Add(new ChartIndex()
+                {
+                    display = $"{ CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(index) }",
+                    no = index
+                });
+            }
+        }
+        else if (Interval == 3) //years
+        {
+
+            foreach (var index in events.Select(s => ((DateTime)s.Date).Year).Order().Distinct().ToList())
+            {
+                chartindexes.Add(new ChartIndex()
+                    {
+                        display = $"{index}",
+                        no = index
+                    });
+            }
+        }
+        else if (Interval == 0) //dates
+        {
+
+            foreach (var index in events.Select(s => ((DateTime)s.Date)).Distinct().Order().ToList())
+            {
+                chartindexes.Add(new ChartIndex()
+                    {
+                        display = index.ToString("dd/MM/yy"),
+                        date = index
+                    });
+            }
+
+        }
+
+
+        var datasetsline = new List<IChartDataset>();
+        var datasetsbar = new List<IChartDataset>();
+        List<double?> allvalues = new();
+        var datasetsCount = 0;
+        foreach (var id in events.Select(s => s.Category).Distinct())
+        {
+
+            var datapoints = new List<DataPoint>();
+            var temp = new MatrixChartDataString()
+            {
+               // Id = id,
+                    item = id,
+                    Color = events.FirstOrDefault(s => s.Category == id).Color != null ? events.FirstOrDefault(s => s.Category == id).Color : ReportingColors.CustomPalette200.ToList()[datasetsCount].ToString()
+                };
+            datasetsCount++;
+            if (datasetsCount >= ReportingColors.CustomPalette200.Count())
+            {
+                datasetsCount = 0;
+            }
+            // List<double?> data = new();
+            foreach (var index in chartindexes)
+            {
+                switch (Interval)
+                {
+                    case 0: //Day
+                        datapoints.Add(new DataPoint()
+                            {
+                                index = index,
+                                value = Convert.ToInt64(events.Where(s => s.Category == id && ((DateTime)s.Date).Date == index.date).Select(t => t.Date).Count())
+                            });
+                        break;
+                    case 1: //Week
+
+                        datapoints.Add(new DataPoint()
+                            {
+                                index = index,
+                                value = Convert.ToInt64(events.Where(s => s.Category == id && cal.GetWeekOfYear(((DateTime)s.Date).Date, CalendarWeekRule.FirstDay, DayOfWeek.Monday) == index.no).Select(t => t.Date).Count())
+                            });
+
+                        break;
+                    case 2: //Month
+                        datapoints.Add(new DataPoint()
+                            {
+                                index = index,
+                                value = Convert.ToInt64(events.Where(s => s.Category == id && ((DateTime)s.Date).Date.Month == index.no).Select(t => t.Date).Count())
+                            });
+                        break;
+                    case 3://year
+                        datapoints.Add(new DataPoint()
+                            {
+                                index = index,
+                                value = Convert.ToInt64(events.Where(s => s.Category == id && ((DateTime)s.Date).Date.Year == index.no).Select(t => t.Date).Count())
+                            });
+
+                        break;
+                }
+
+            }
+            temp.max = datapoints.Select(d => d.value).Max();
+            temp.average = datapoints.Select(d => d.value).Sum() / datapoints.Select(d => d.value).Sum();
+            temp.data = datapoints;
+            tempdata.Add(temp);
+
+        }
+
+        if (TopN != null && tempdata.Count() > TopN)
+        {
+            foreach (var item in tempdata.OrderByDescending(s => s.max).Chunk((int)TopN).First())
+            {
+
+                datasetsline.Add(new LineChartDataset()
+                    {
+                        Label = $"{item.item}",
+                        // Data = item.data.First().index.date == null ? item.data.OrderBy(s => s.index.no).Select(s => s.value).ToList() : item.data.OrderBy(s => s.index.date).Select(s => s.value).ToList(),
+                        Data = item.data.Select(s => s.value).ToList(),
+                        BackgroundColor = $"{item.Color}",
+                        BorderColor = $"{item.Color}",
+                        BorderWidth = _borderwidth,
+                        HoverBorderWidth = 4,
+                        PointRadius = new List<double> { 1 }
+                    });
+            }
+        }
+        else
+        {
+            foreach (var item in tempdata.OrderByDescending(s => s.max))
+            {
+
+                datasetsline.Add(new LineChartDataset()
+                    {
+                        Label = $"{item.item}",
+                        // Data = item.data.First().index.date == null ? item.data.OrderBy(s => s.index.no).Select(s => s.value).ToList() : item.data.OrderBy(s => s.index.date).Select(s => s.value).ToList(),
+                        Data = item.data.Select(s => s.value).ToList(),
+                        BackgroundColor = $"{item.Color}",
+                        BorderColor = $"{item.Color}",
+                        BorderWidth = _borderwidth,
+                        HoverBorderWidth = 4,
+                        PointRadius = new List<double> { 1 }
+
+
+                    });
+            }
+        }
+
+     
+        
+        // foreach (var item in tempdata.OrderByDescending(s=> s.max).Chunk(10).First())
+        // {
+    
+        //     datasets.Add(new BarChartDataset()
+        //         {
+        //             Label = $"{item.item}",
+        //             // Data = item.data.First().index.date == null ? item.data.OrderBy(s => s.index.no).Select(s => s.value).ToList() : item.data.OrderBy(s => s.index.date).Select(s => s.value).ToList(),
+        //              Data =  item.data.Select(s => s.value).ToList(),
+        //             BackgroundColor = new List<string> { $"{item.Color}" },
+        //             BorderColor = new List<string> { $"{item.Color}" },
+        //             BorderWidth = new List<double> { 0 }
+        //         });
+        // }
+
+       
+        chartData = new ChartData { Labels = chartindexes.Select(s => s.display).ToList() , Datasets = datasetsline };
+        if (BarChart != null)
+        {
+            await BarChart.UpdateAsync(chartData, BarChartOptions);
+        }
+
+    }
+
+} 

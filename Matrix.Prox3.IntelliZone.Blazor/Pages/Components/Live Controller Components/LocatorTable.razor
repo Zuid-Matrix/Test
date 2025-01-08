@@ -1,0 +1,203 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Microsoft.EntityFrameworkCore
+@using System.Threading.Tasks
+@using System.Drawing
+@using System.Data
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject IJSRuntime js
+@inject ILogger<LocatorTable> _logger
+@inject HttpClient http
+
+<div class="table-container">
+		<div class="page-size-chooser">
+			Items per page:
+			<select @bind="@pagination.ItemsPerPage">
+				<option value="10" selected>10</option>
+				<option value="20">20</option>
+				<option value="50">50</option>
+				<option value="100">100</option>
+				<option value="200">200</option>
+			</select>
+		</div>
+		<QuickGrid Class="table"  Items="@temp" Pagination="@pagination">
+			 <PropertyColumn Property="@(p => ((uint)p.decMNID!).ToString("X"))" Title="MNID" Sortable="true" >
+			<ColumnOptions>
+			<div class="search-box">
+				<input type="search" autofocus @bind="mnidFIlter" @bind:event="oninput" placeholder="MNID..." />
+			</div>
+			</ColumnOptions>
+			</PropertyColumn>
+			<TemplateColumn Title="Employee">
+			<ColumnOptions>
+				<div class="search-box">
+					<input type="search" autofocus @bind="nameFilter" @bind:event="oninput" placeholder="Surname..." />
+				</div>
+			</ColumnOptions>
+			<ChildContent>
+				@if (context.allocation != null && context.allocation.Employee != null)
+				{
+					<p>@context.allocation.Employee.Surname,@(context.allocation.Employee.Initials != null ? $"{context.allocation.Employee.Initials}" : "")@(context.allocation.Employee.Names != null ?$"({context.allocation.Employee.Names})":"") </p>
+				}
+			</ChildContent>
+			</TemplateColumn>
+			<TemplateColumn Title="Rack No.">
+				@if (context.allocation != null && context.allocation.ChargingPoint != null)
+				{
+					<p>@context.allocation.ChargingPoint.PointName </p>
+					
+				}
+			</TemplateColumn>
+			<PropertyColumn Property="@(p => p.dateTime)" Title="Last Seen" Sortable="true" />
+			<PropertyColumn Property="@(p => p.locatorProximityState)" Title="Last Track Status" Sortable="true" />
+			<PropertyColumn Property="@(p => p.batteryVoltage != null? (Math.Round(((uint)p.batteryVoltage/ 127.0) * 100) > 100.0 ? 100 : Math.Round(((uint)p.batteryVoltage / 127.0) * 100) ) : 0)" Title="Battery %" Sortable="true" />
+			<PropertyColumn Property="@(p => p.dateTimeInrangeLeaving)" Title="Last Seen Leaving" Sortable="true" />
+			<PropertyColumn Property="@(p => p.dateTimeInrangeArriving)" Title="Last Seen Back" Sortable="true" />
+			<PropertyColumn Property="@(p => p.distancefrom/3.3)" Title="Distance"  Sortable="true" />
+			<TemplateColumn Title="Test Status">
+			@if (context.loc_test_status != 0 && context.LocatorType != LocatorType.LOCATOR_TYPE_MML)
+			{
+				<td class="bg-danger bg-opacity-50">Not Tested</td>
+			}
+				else if (context.loc_test_status == 0 && context.LocatorType != LocatorType.LOCATOR_TYPE_MML)
+			{
+				<td class="bg-success bg-opacity-50">PASSED</td>
+			}
+			else
+			{
+				<td>UNKNOWN</td>
+			}
+			</TemplateColumn>
+			<PropertyColumn Property="@(p => p.Device != null ? p.Device.IP : "")" Title="Device" Sortable="true" />
+		</QuickGrid>
+		<Paginator State="@pagination" />
+	
+	
+
+</div>
+
+
+
+
+@code {
+	PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+	public int viewForHours = 10;
+
+	// [Parameter]
+	// public List<ActiveLocator> activeLocators { get; set;  }
+
+
+	[Parameter]
+	public List<BlazorControllerReport> ControllerReports { get; set; }
+
+	private TimeSpan controllerTimeout = TimeSpan.FromSeconds(10);
+
+	private float ft = (float)3.28084;
+	private float? syncratems = (float)0.0;
+
+	
+	string mnidFIlter = "";
+	string nameFilter = "";
+
+
+	IQueryable<ActiveLocator> temp
+	{
+		get
+		{
+			if (!string.IsNullOrEmpty(mnidFIlter))
+			{
+				
+				var temprep = ControllerReports.SelectMany(s => s.ActiveLocators!).Where(c => c.decMNID != null && ((uint)c.decMNID).ToString("X").Contains(mnidFIlter));
+				if (temprep != null)
+				{
+					return temprep.OrderByDescending(s => s.dateTime).AsQueryable();
+				}
+			}
+			if (!string.IsNullOrEmpty(nameFilter))
+			{
+				var temprep = ControllerReports.SelectMany(s => s.ActiveLocators!).Where(c => c.allocation != null && c.allocation.Employee != null && c.allocation.Employee.Surname != null && c.allocation.Employee.Surname.Contains(nameFilter));
+				if (temprep != null)
+				{
+
+					return temprep.OrderByDescending(s => s.dateTime).AsQueryable();
+				}
+			}
+			return ControllerReports.SelectMany(s => s.ActiveLocators!).OrderByDescending(s => s.dateTime).AsQueryable();
+		}
+	}
+
+
+
+
+	private void ExportList()
+	{
+
+	}
+
+	public void Dispose()
+	{
+
+
+	}
+
+	private async void ClearLocator(ActiveLocator locatorToClear)
+	{
+
+		// using (var _locatorContext = await _ctxFactory.CreateDbContextAsync())
+		// {
+	
+				
+		// 		locatorToClear.cleared = true;
+		// 		locatorToClear.clearedby = popupPass.username;
+		// 		try
+		// 		{
+		// 			_locatorContext.ActiveLocators.Update(locatorToClear);
+		// 			await _locatorContext.SaveChangesAsync();
+		// 			await InvokeAsync(StateHasChanged);
+		// 		}
+		// 		catch (Exception e)
+		// 		{
+		// 			_logger.LogError("LocatorTable.Razor");
+		// 			_logger.LogError(e.ToString());
+		// 		}
+
+			
+		// }
+
+	}
+
+	private async void DeleteLocator(ActiveLocator locatorToClear)
+	{
+	//	using (var _locatorContext = await _ctxFactory.CreateDbContextAsync())
+		//{
+		
+			///Verify Password from API
+			///
+			
+		
+	//			_locatorContext.ActiveLocators.Remove(locatorToClear);
+		//		await _locatorContext.SaveChangesAsync();
+			
+		//}
+
+	}
+
+	private async Task Save()
+	{
+
+		//var temp = _reportbuilder.GenerateWorkbook(viewForHours);
+		
+
+		try
+		{
+			var filename = "";
+			filename += Convert.ToString(DateTime.Now);
+			filename += ".xlsx";
+			//await js.InvokeVoidAsync("BlazorDownloadFile", filename, temp);
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine(e);
+		}
+
+	}
+}

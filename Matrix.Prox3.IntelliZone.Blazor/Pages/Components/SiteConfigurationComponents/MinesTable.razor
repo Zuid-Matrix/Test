@@ -1,0 +1,87 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Microsoft.EntityFrameworkCore
+@inject HttpClient http
+
+
+
+<div class="component-headings">Mines</div>
+<hr  class="mt-0" />
+<button class="btn btn-outlineprimary" @onclick="@AddMine">Add new Mine</button>
+<br />
+<div class="ms-2">
+	Items per page:
+	<select @bind="@pagination.ItemsPerPage">
+		<option selected>10</option>
+		<option>20</option>
+		<option>50</option>
+		<option>100</option>
+		<option>200</option>
+	</select>
+</div>
+<br />
+@if (mines != null)
+{
+	<QuickGrid Class="table" Items="mines" TGridItem="Mine" Pagination="@pagination">
+		<PropertyColumn Property="@(p => p.MineName)" Title="Mine" Sortable="true" />
+		<PropertyColumn Property="@(p => p.timeZoneSerString)" Title="TimeZone" Sortable="true" />
+		<TemplateColumn>
+			<button Class="btn btn-light" @onclick="()=>Update(context)">Edit</button>
+		</TemplateColumn>
+
+	</QuickGrid>
+	<Paginator State="@pagination" />
+	
+}
+
+
+
+
+
+@code {
+	[CascadingParameter] public IModalService Modal { get; set; } = default!;
+
+	private MatrixDevice? tempcontroller = new();
+
+
+	PaginationState pagination = new PaginationState { ItemsPerPage = 10};
+
+
+
+
+
+	IQueryable<Mine> mines
+	{
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<Mine>>("api/Mine"));
+				t.Wait();
+				return t.Result.AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+		}
+	}
+
+
+	private async Task Update(Mine Mine)
+	{
+		ModalParameters tempparameters = new ModalParameters().Add(nameof(MineModal.Mine), Mine);
+		await Modal.Show<MineModal>("Edit Mine", tempparameters).Result;
+		await InvokeAsync(() => StateHasChanged());
+	}
+
+	private async Task AddMine()
+	{
+		await Modal.Show<MineModal>("New Mine").Result;
+		await InvokeAsync(StateHasChanged);
+	}
+
+
+
+	
+}
+

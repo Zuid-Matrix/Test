@@ -1,0 +1,637 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Matrix.Prox3.IntelliZone.Data.GlobalConfiguration
+@using Plotly.Blazor.LayoutLib
+@using Plotly.Blazor.LayoutLib.SceneLib
+@using XAxis = Plotly.Blazor.LayoutLib.SceneLib.XAxis
+@using YAxis = Plotly.Blazor.LayoutLib.SceneLib.YAxis
+@using Newtonsoft.Json.Linq
+@using System.Globalization
+@using System.ComponentModel
+@using Matrix.Prox3.IntelliZone.Data.VolatileStorage
+@using Matrix.Prox3.Connection.Data
+@using Matrix.Prox3.Connection.Enums
+@using Matrix.Prox3.IntelliZone.Blazor.Components
+@using MudBlazor
+@using System.IO
+@inject HttpClient http
+@inject IJSRuntime JS
+
+
+<div>
+
+    @if (ControllerReport != null && ControllerReport.LiveCompensationValues != null && MNID != null)
+    {
+        var reports = ControllerReport.LiveCompensationValues.Where(s => s.decMNID == MNID);
+
+        if (reports.Any())
+        {
+            <div class="d-flex flex-wrap">
+                <CompensationValue Value="@reports.First().CompensationValues![0]" />
+                <CompensationValue Value="@reports.First().CompensationValues![1]" />
+                <CompensationValue Value="@reports.First().CompensationValues![2]" />
+                <CompensationValue Value="@reports.First().CompensationValues![3]" />
+            </div>
+        }
+
+    }
+    else
+    {
+        <div class="d-flex flex-wrap">
+            <CompensationValue Value="null" />
+            <CompensationValue Value="null" />
+            <CompensationValue Value="null" />
+            <CompensationValue Value="null" />
+
+        </div>
+    }
+
+
+    <Button Class="btn-outline-primary m-2" @onclick="LoadNewFile ">Upload New File</Button>
+    <div class="table-container">
+        <div class="page-size-chooser">
+        Items per page:
+        <select @bind="@pagination.ItemsPerPage">
+            <option>2</option>
+            <option>5</option>
+            <option>10</option>
+            <option>100</option>
+            <option>200</option>
+        </select>
+    </div>
+
+
+    <QuickGrid class="Table" Items="@files.AsQueryable()" TGridItem="MatrixFile" Pagination="@pagination">
+        <Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Property="@(p => p.MachineName != null ? p.MachineName : "")" Title="Machine Name" Sortable="true"></Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn>
+        <Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Property="@(p => p.Machine != null ? p.Machine.MachName : "")" Title="Machine" Sortable="true"></Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn>
+        <Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Property="@(p => p.Section != null ? p.Section.SectionName : "")" Title="Section" Sortable="true"></Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn>
+        <Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Property="@(p => p.FileID)" Title="ID" Sortable="true"></Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn>
+        <Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Property="@(p => p.FileType)" Title="Type" Sortable="true"></Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn>
+        <Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Property="@(p => p.CreatedDate)" Title="Created Date" Sortable="true"></Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn>
+        <Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Property="@(p => p.UploadDate)" Title="Upload Date" Sortable="true"></Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn>
+        <Microsoft.AspNetCore.Components.QuickGrid.TemplateColumn Title="View Compensation">
+            <ChildContent Context="filecontext">
+                <MudBlazor.MudButton OnClick="(() => GetCompensation(filecontext))">View Compensation</MudBlazor.MudButton>
+            </ChildContent>
+        </Microsoft.AspNetCore.Components.QuickGrid.TemplateColumn>
+        <Microsoft.AspNetCore.Components.QuickGrid.TemplateColumn Title="Download File">
+            <ChildContent Context="filecontext">
+                @if (filecontext.FileType == FileType.ProxConfiguration)
+                {
+                    <MudBlazor.MudButton OnClick="(() => Export(filecontext))">Download File</MudBlazor.MudButton>
+                }
+            </ChildContent>
+        </Microsoft.AspNetCore.Components.QuickGrid.TemplateColumn> 
+
+    </QuickGrid>
+
+    <Paginator State="@pagination" />
+    </div>
+    
+
+
+    <hr/>
+    @if (compensationData != null && compensationData.CompData.Any())
+    {
+    <div class="d-flex">
+        <div class="col-4">
+            <p style="font-weight:bold">Chart Options:</p>
+
+
+            <div class="d-flex col-12 align-items-center">
+                <div class="col-6"> Driver No:</div>  
+                <InputSelect class="form-select" 
+                TValue="int"
+                Value="driver"
+                ValueChanged="UpdateChartViewDriverNum"
+                ValueExpression="@(() => driver)">
+                    <option selected value=0>Driver 0</option>
+                    <option value=1>Driver 1</option>
+                    <option value=2>Driver 2</option>
+                    <option value=3>Driver 3</option>
+                </InputSelect> 
+            </div>
+
+
+            <div class="d-flex col-12 align-items-center mt-2">
+                <div class="col-6"> Plot up to: </div>
+                <div class="col-6">
+                    <input type="range" min="0" max="80" value="80" @onchange="UpdateChartViewDistance" />
+                    <span style="font-weight:bold"> @plotTo ft. </span>
+                </div>
+            </div>
+            <hr />
+
+            <p style="font-weight:bold">Edit Options:</p>
+            <div class="d-flex col-12 align-items-center">
+                <div class="col-6"> Angle:  </div>
+                <div class="col-6">
+                    <InputSelect class="form-select" @bind-Value="selectedangle">
+                        @foreach (var angle in angles)
+                        {
+                            <option value="@angle">@angle° </option>
+                        }
+                    </InputSelect>
+                </div>
+
+
+
+            </div>
+
+            <div class="d-flex col-12 align-items-center">
+                <div class="col-6">  Base Distance(s) to adjust: </div>
+                <div lass="col-6">
+                    <div class="d-flex col-8 me-2 align-items-center">
+                        <div class="col-6"> from:</div>
+                        <select  class="form-select col-6" @bind="@basedistfrom">
+                            @foreach (var dist in basedistances)
+                            {
+                                <option value="@dist"> @dist ft.</option>
+                            }
+                        </select>
+
+                    </div>
+
+                    <div class="d-flex col-8 align-items-center">
+                        <div class="col-6"> to:</div>
+                        <select  class="form-select col-6" @bind="@basedistto">
+                            @foreach (var dist in basedistances)
+                            {
+                                <option value="@dist"> @dist ft.</option>
+                            }
+                        </select>
+
+                    </div>
+                </div>
+
+            </div>
+            <div class="mt-2 mb-b">
+                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Info" StartIcon="@Icons.Material.Rounded.Add" @onclick=@(() => Adjust(2))>2</MudButton>
+                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Info" StartIcon="@Icons.Material.Rounded.Add" @onclick=@(() => Adjust(1))>1</MudButton>
+                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Info" StartIcon="@Icons.Material.Rounded.Add" @onclick=@(() => Adjust(0.25))>0.25</MudButton>
+                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Info" StartIcon="@Icons.Material.Rounded.Remove" @onclick=@(() => Adjust(-0.25))>0.25</MudButton>
+                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Info" StartIcon="@Icons.Material.Rounded.Remove" @onclick=@(() => Adjust(-1))>1</MudButton>
+                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Info" StartIcon="@Icons.Material.Rounded.Remove"  @onclick=@(() => Adjust(-2))>2</MudButton>
+            </div>
+            <div class="mt-2">
+                <MudTooltip>
+                    <ChildContent>
+                        <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Info" StartIcon="@Icons.Material.Filled.Blender" @onclick=BlendDistances>Blend between</MudButton>
+                    </ChildContent>
+                    <TooltipContent>
+                        <MudText Typo="Typo.h6">For blending:</MudText>
+                        <MudText Typo="Typo.body2">1. Set/Keep final distance</MudText>
+                        <MudText Typo="Typo.body2">2. Set/Keep start distance</MudText>
+                        <MudText Typo="Typo.body2">3. Blending then takes the count of compensation points and </MudText>
+                        <MudText Typo="Typo.body2">the distance from start to finish, and adjusts all the points in the middle equally</MudText>
+                    </TooltipContent>
+                </MudTooltip>
+            </div>
+            <hr />
+            @if (currentFile != null && compensationData != null)
+            {
+                <div class="d-flex">
+                    <div class="col-1">Name:</div>
+                    <div class="col-9 me-1">
+                        <InputText class="form-control" style="min-width:400px" @bind-Value="compensationData.Name" />
+                    </div>
+                    <AuthorizeView Roles="Engineering,Admin">
+                        <Authorized>
+
+                            <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Info" StartIcon="@Icons.Material.Rounded.Save" @onclick=Save>Save</MudButton>
+
+
+                        </Authorized>
+
+                    </AuthorizeView>
+
+                </div>
+            }
+        </div>
+        <div class="col-8">
+
+            @if (data0 != null)
+            {
+                <PlotlyChart style="height: 80vh; min-height: 350px; max-width:1500px" @bind-Layout="layout0" @bind-Data="data0" @ref="chart0" />
+            }
+        </div>
+    </div>
+    }
+    <hr />
+</div>
+
+
+
+
+@code{
+
+    [Parameter]
+    public BlazorControllerReport ControllerReport { get; set; }
+
+    [Parameter]
+    public uint? MNID { get; set; }
+
+    [CascadingParameter] public IModalService Modal { get; set; } = default!;
+    private int driver = 0;
+
+
+    PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+    private MatrixFile? currentFile;
+    private MatrixCompensationData? compensationData;
+    private List<CompensationPoint> driverCompensation = new();
+
+    private int[] angles = new[]
+    {
+            0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360
+    };
+
+    private int[] basedistances = new[]
+    {
+                0, 2, 4 ,6 ,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80
+    };
+
+
+    private float[] blendOptions = 
+    {
+            0.5F, 1.0F, 1.5F, 2.0F
+    };
+
+
+    private float blendAxial = 0;
+    private float blendAngular = 0;
+
+
+    private string[] driverColor = new string[]{ "Peru", "Red", "Blue", "Green" };
+
+    private int adjustment = 0;
+    private int selectedangle = 0;
+    private int basedistfrom = 2;
+    private int basedistto = 2;
+    private PlotlyChart chart0;
+    private Layout layout0;
+    private IList<ITrace> data0;
+
+    private bool IsInitialized { get; set; }
+
+
+    private int plotTo = 80;
+
+    IQueryable<MatrixFile> files
+    {
+
+        get
+        {
+            try
+            {
+                var t = Task.Run(async () => await http.GetFromJsonAsync<List<MatrixFile>>("api/File/matrixfiles"));
+                t.Wait();
+                return t.Result.AsQueryable();
+            }
+            catch
+            {
+                return null;
+            }
+
+        }
+
+    }
+
+
+    private async Task Adjust(double value)
+    {
+        if(basedistfrom <= basedistto)
+        {
+            for (int i = basedistfrom; i <=basedistto; i+=2)
+            {
+
+                var itemtoadjust = driverCompensation.FirstOrDefault(s => s.driver == driver && s.baseDist == i && s.degAngle == selectedangle);
+                if (itemtoadjust != null)
+                {
+                    if (itemtoadjust.finalDist + value > 0)
+                    {
+                        itemtoadjust.compDist += (float)value;
+                        itemtoadjust.finalDist += (float)value;
+                    }
+
+                }
+            }
+
+        }
+        await SetupChart();
+        if (chart0 != null && chart0.Data != null)
+        {
+            chart0.Data = data0;
+            await chart0.Update();
+        }
+        StateHasChanged();
+    }
+
+    private async Task BlendDistances()
+    {
+
+        if (basedistfrom <= basedistto)
+        {
+
+            var intervals = (basedistto - basedistfrom ) / 2 ;
+            var start = driverCompensation.FirstOrDefault(s => s.driver == driver && s.baseDist == basedistfrom && s.degAngle == selectedangle).finalDist;
+            var end = driverCompensation.FirstOrDefault(s => s.driver == driver && s.baseDist == basedistto && s.degAngle == selectedangle).finalDist;
+            var steps = (end - start) / intervals; 
+            for (int i = basedistfrom + 2; i < basedistto; i += 2)
+            {
+                var previousitem = driverCompensation.FirstOrDefault(s => s.driver == driver && s.baseDist == i - 2 && s.degAngle == selectedangle);
+                var itemtoadjust = driverCompensation.FirstOrDefault(s => s.driver == driver && s.baseDist == i && s.degAngle == selectedangle);
+                if (itemtoadjust != null && previousitem != null)
+                {
+
+                    itemtoadjust.finalDist = previousitem.finalDist + steps;
+                    itemtoadjust.compDist = (float)(itemtoadjust.finalDist - itemtoadjust.baseDist);
+                }
+            }
+
+        }
+
+
+
+
+
+        await SetupChart();
+        if (chart0 != null && chart0.Data != null)
+        {
+            chart0.Data = data0;
+            await chart0.Update();
+        }
+        StateHasChanged();
+    }
+
+    private async Task UpdateChart()
+    {
+
+
+        await SetupChart();
+        if (chart0 != null && chart0.Data != null)
+        {
+            chart0.Data = data0;
+            await chart0.Update();
+        }
+        StateHasChanged();
+
+
+    }
+
+    private async Task Save()
+    {
+        var compensationdata = new MatrixCompensationData();
+        compensationdata.Range = 80;
+        List<MatrixCompensationDriver> temp = new();
+        int intDriver = 0;
+        foreach (var driver in compensationData.CompData)
+        {
+            int intAngle = 0;
+            foreach (var angle in driver.Angles)
+            {
+                List<float> values = driverCompensation.Where(s => s.intAngle == intAngle && s.driver == intDriver).OrderBy(s => s.baseDist).Select(s => s.compDist).ToList();
+                angle.Distances = values;
+                intAngle++;
+            }
+            temp.Add(driver);
+            intDriver++;
+        }
+        compensationdata.CompData = temp;
+        if (compensationData.Name.Contains("edit"))
+        {
+            compensationData.Name = compensationData.Name.Split("_edit").First();
+        }
+
+        compensationData.Name = $"{compensationData.Name}_edit({DateTime.Now})";
+        compensationData.Name = compensationData.Name.Replace(' ', '_').Replace('/', '_').Replace('(', '_').Replace(')', '_').Replace(':', '_');
+
+        currentFile.FileContent = System.Text.Encoding.ASCII.GetBytes(compensationData.ToString());
+        currentFile.FileName = $"{compensationData.Name}.conf";
+        var result = await http.PostAsJsonAsync<MatrixFile>($"api/File", currentFile);     
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Export(MatrixFile file)
+    {
+
+
+        var fileDownload = await http.GetFromJsonAsync<MatrixFile>($"api/File/getfile?fileID={file.FileID}");
+        var temp = System.Text.Encoding.UTF8.GetString(fileDownload.FileContent, 0, fileDownload.FileContent.Length);
+        await JS.InvokeVoidAsync("downloadFileFromStream", fileDownload.FileName,temp);
+    }
+
+    // private async Task Export()
+    // {
+
+
+    //     var compensationdata = new MatrixCompensationData();
+    //     compensationdata.Range = 80;
+    //     List<MatrixCompensationDriver> temp = new();
+    //     int intDriver = 0;
+    //     foreach (var driver in compensationData.CompData)
+    //     {
+    //         int intAngle = 0;
+    //         foreach (var angle in driver.Angles)
+    //         {
+    //             List<float> values = driverCompensation.Where(s => s.intAngle == intAngle && s.driver == intDriver).OrderBy(s => s.baseDist).Select(s => s.compDist).ToList();
+    //             angle.Distances = values;
+    //             intAngle++;
+    //         }
+    //         temp.Add(driver);
+    //         intDriver++;
+    //     }
+    //     compensationdata.CompData = temp;
+       
+    //     if (compensationdata.Name.Contains("edit"))
+    //     {
+    //         compensationdata.Name = compensationdata.Name.Split("_edit").First();
+    //     }
+
+    //     compensationdata.Name = $"{compensationdata.Name}_edit({DateTime.Now})";
+    //     compensationdata.Name = compensationdata.Name.Replace(' ', '_').Replace('/', '_').Replace('(', '_').Replace(')', '_').Replace(':', '_');
+
+    //     var file = compensationdata.ToString();
+    //     var fileName = $"{compensationdata.Name}.conf";
+    //     // Set a variable to the Documents path.
+    //     await JS.InvokeVoidAsync("downloadFileFromStream", fileName, file);
+    // }
+
+    private async Task UpdateChartViewDistance(ChangeEventArgs e)
+    {
+        plotTo = Convert.ToInt16(e.Value);
+        await SetupChart();
+        if (chart0 != null && chart0.Data != null)
+        {
+            chart0.Data = data0;
+            await chart0.Update();
+        }
+        StateHasChanged();
+    }
+
+    private async void UpdateChartViewDriverNum(int e)
+    {
+        driver = e;
+
+        layout0.Title.Text = $"Driver {driver} Compensation";
+
+        await SetupChart();
+        if (chart0 != null && chart0.Data != null)
+        {
+            chart0.Data = data0;
+            await chart0.Update();
+        }
+        StateHasChanged();
+    }
+
+
+    private async Task LoadNewFile()
+    {
+        driverCompensation.Clear();
+        var result = await Modal.Show<UploadDataModal>("Upload Globalconfiguration or Compensation").Result;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task GetCompensation(MatrixFile file)
+    {
+        driverCompensation.Clear();
+        currentFile = await http.GetFromJsonAsync<MatrixFile>($"api/File/compensationfile?fileID={file.FileID}");
+        compensationData = MatrixCompensationData.FromString(System.Text.Encoding.UTF8.GetString(currentFile.FileContent, 0, currentFile.FileContent.Length));
+        await ProcessCompensation();
+    }
+
+    private async Task ProcessCompensation()
+    {
+
+
+       
+        await deflateCompensation();
+        await SetupLayouts();
+        await SetupChart();
+        if(chart0 !=null)
+        {
+            try
+            {
+                if (chart0 != null && chart0.Data != null)
+                {
+                    chart0.Data = data0;
+                    await chart0.Update();
+                }
+            }
+            catch (ArgumentNullException ex)
+            {
+                Console.WriteLine(ex);
+            }
+
+        }
+
+    }
+
+    private Task deflateCompensation()
+    {
+        driverCompensation.Clear();
+        uint driverNum = 0;
+        foreach (var driver in compensationData.CompData)
+        {
+            int angleNum = 0;
+            foreach (var angle in driver.Angles)
+            {
+                int distanceNum = 2;
+                foreach (var distance in angle.Distances)
+                {
+                    CompensationPoint temp = new();
+                    temp.driver = driverNum;
+                    temp.compDist = distance;
+                    temp.baseDist = distanceNum;
+                    temp.finalDist = distance + distanceNum;
+                    temp.intAngle = angleNum;
+                    temp.degAngle = angleNum * 30;
+                    driverCompensation.Add(temp);
+                    distanceNum += 2;
+                }
+                angleNum++;
+            }
+            driverNum++;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task SetupLayouts()
+    {
+
+
+
+        var polarDefault = new List<Polar>()
+        {
+
+            new Polar()
+            {
+                AngularAxis = new AngularAxis()
+                {
+                    Visible = true,
+                    Direction = Plotly.Blazor.LayoutLib.PolarLib.AngularAxisLib.DirectionEnum.Clockwise,
+                    Rotation = 0,
+                    DTick = 30
+                    
+                }
+            }
+
+        };
+
+
+        layout0 = new Layout
+        {
+               Title = new Plotly.Blazor.LayoutLib.Title
+                {
+                    Text = $"Driver {driver} Compensation"
+                },
+                ShowLegend = false,
+                Polar = polarDefault
+        };
+
+
+
+
+
+        return Task.CompletedTask;
+    }
+    private Task SetupChart()
+    {
+
+
+
+        if (driverCompensation.Any())
+        {
+            foreach (var driverNumber in driverCompensation.Select( s=> s.driver).Distinct())
+            {
+                if (driverNumber == driver)
+                {
+
+                    data0 = new List<ITrace>();
+                    foreach (var baseDist in driverCompensation.Select(s => s.baseDist).Distinct())
+                    {
+                        var compPoints = driverCompensation.Where(s => s.driver == driverNumber && s.baseDist == baseDist);
+  
+                        if (baseDist <= plotTo)
+                        {
+                            var trace = new ScatterPolar()
+                                    {
+                                        R = compPoints.OrderBy(s => s.intAngle).Select(s => s.finalDist).ToArray().OfType<object>().ToList(),
+                                        Theta = angles.OfType<object>().ToList(),
+
+                                        Mode = ModeFlag.Lines,
+                                        Name = $"{baseDist}",
+                                        Line = new Line(), //{ Color = driverColor[driver]},
+                                        ConnectGaps = true
+                                    };
+                            data0.Add(trace);
+                        }
+                    }
+                }
+        
+            }
+        }
+        return Task.CompletedTask;
+
+	}
+}

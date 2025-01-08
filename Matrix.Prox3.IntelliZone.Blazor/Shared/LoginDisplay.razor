@@ -1,0 +1,53 @@
+﻿@inject IConfiguration _config
+@inject NavigationManager MyNavigationManager
+@using System.Web
+@using System.Security.Claims
+@using Matrix.Prox3.IntelliZone.Data.VolatileStorage
+@using Matrix.Prox3.IntelliZone.Data.Authentication
+<CascadingAuthenticationState>
+    <AuthorizeView >
+        <Authorized>
+            <div class="d-flex align-items-center justify-content-center">
+            @if (context.User.Claims.Where(s => s.Type == ClaimTypes.Role).Any())
+            {
+                <div class="ms-1">@(context.User.Claims.Where(s => s.Type == ClaimTypes.Role).Select(s => s.Value).First()) </div>
+            }
+            @if (context.User.Claims.Where(s => s.Type == ClaimTypes.Email).Any())
+            {
+           
+                string user = context.User.Claims.Where(s => s.Type == ClaimTypes.Email).Select(s => s.Value).First().Split('@').First();
+                var name = user.Split('.').First().ToUpper();
+                string? surname = user.Split('.').Last().ToUpper();
+
+                <Button class="rounded-circle btn-secondary ms-2">@name[0]@(surname != null ? surname[0] : "")</Button>
+            }
+            else
+            {
+                <NavLink class="nav-link" href="@signinurl">Log In</NavLink>
+            }
+            </div>
+        </Authorized>
+        <NotAuthorized>
+                <NavLink class="nav-link" href="@signinurl">Log In</NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+
+@code
+{
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+    private string r = "";
+    private string callback = "";
+    private string pid = $"";
+    private string  signinurl = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        r =  $"&r={HttpUtility.UrlEncode(MyNavigationManager.Uri)}";
+        callback = $"?callback={HttpUtility.UrlEncode(MyNavigationManager.BaseUri)}api%2FLogin%2FLoginCallback";
+        pid = $"&pid={_config["APIKey"]}";
+        signinurl = $"{_config["SignonURL"]}account/login{callback}{r}{pid}";
+    }
+}

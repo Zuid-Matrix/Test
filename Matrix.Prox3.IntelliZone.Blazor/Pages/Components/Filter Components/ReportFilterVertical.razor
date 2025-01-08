@@ -1,0 +1,499 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using MudBlazor
+@inject HttpClient http
+@inject IJSRuntime js
+
+@if (CurrentMines.Any() && CurrentSections.Any() )
+{
+	<div class="filter-container">
+
+		<div class="ms-1 mb-2">
+			<div class="fw-bolder mb-1">Mine:</div>
+			<InputSelect class="form-select"
+			TValue="string[]"
+			Value="@SelectedMines"
+			ValueChanged="UpdateMines"
+			ValueExpression="@(() => SelectedMines)">
+
+				<option value="">Select All..</option>
+				@if (CurrentMines != null && CurrentMines.Any())
+				{
+					@foreach (var (selected, mine) in CurrentMines)
+					{
+
+						<option class="@(selected ? "highlight-selected" : "")" selected="@selected" value="@(mine.MineName)">@(mine.MineName)</option>
+
+					}
+				}
+			</InputSelect> 
+				
+			</div>
+		<div class="selector-block ms-1 mb-2">
+			<div class="fw-bolder mb-1">Section:</div>
+			<InputSelect class="form-control h-50"
+			TValue="int[]"
+			Value="@SelectedSections"
+			ValueChanged="UpdateSections"
+			ValueExpression="@(() => SelectedSections)">
+				<option value=[]>Select All..</option>
+				@if (CurrentSections != null && CurrentSections.Any())
+				{
+					@foreach (var (selected, section) in CurrentSections)
+					{
+						<option class="@(selected ? "highlight-selected" : "")" selected="@selected" value="@(section.SectionId)">@(section.SectionName)</option>
+					}
+				}
+			</InputSelect>
+
+		</div>
+		<div class="selector-block ms-1 mb-2">
+			<div class="fw-bolder mb-1">Only Show top N:</div>
+			<InputSelect class="form-control"
+			TValue="int?"
+			Value="@TopN"
+			ValueChanged="UpdateTopN"
+			ValueExpression="@(() => TopN)">
+				<option selected value="1000">All..</option>
+				@for (int i = 1; i <= 10; i++)
+				{
+					<option  value="@(i)">@(i)</option>
+				}
+				<option value=100>100</option>
+
+			</InputSelect>
+
+		</div> 
+			
+	</div>
+
+	<div class="filter-container">
+		<div class="d-flex flex-wrap mb-2 flex-grow-0">
+		@if(SelectedDates != null && SelectedDates.Start != null)
+		{
+				<Button class=" col-6 p-1  fw-bolder" Disabled="@(((DateTime)SelectedDates.End - (DateTime)SelectedDates.Start).TotalDays > 31 ? true : false)" Outline="true" Type="BlazorBootstrap.ButtonType.Button" Color="Interval == 0 ? ButtonColor.Primary : ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="() => UpdateReportingDateorInterval(null, null, null,0, null) ">Daily</Button>
+		}
+		<Button class="col-6 p-1 fw-bolder" Type="BlazorBootstrap.ButtonType.Button" Outline="true" Color="Interval == 1 ? ButtonColor.Primary : ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="() => UpdateReportingDateorInterval(null, null, null,1, null)">Weekly</Button>
+		<Button class="col-6 p-1 fw-bolder" Type="BlazorBootstrap.ButtonType.Button" Outline="true" Color="Interval == 2 ? ButtonColor.Primary : ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="() => UpdateReportingDateorInterval(null, null, null,2, null)">Monthly</Button>
+		<Button class="col-6 p-1 fw-bolder" Type="BlazorBootstrap.ButtonType.Button" Outline="true" Color="Interval == 3 ? ButtonColor.Primary : ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="() => UpdateReportingDateorInterval(null, null, null,3, null)">Yearly</Button>
+		</div>
+		<div class="d-flex flex-wrap mb-2 flex-grow-0">
+			<Button class="col-6  p-1  fw-bolder" Outline="true" Type="BlazorBootstrap.ButtonType.Button" Color="Duration == 1 ? ButtonColor.Primary : ButtonColor.Secondary" Size="ButtonSize.Small"
+					@onclick="() => UpdateReportingDateorInterval(null, null, 7,0, 1)">
+				7 Days
+			</Button>
+			<Button class="col-6  p-1  fw-bolder" Outline="true" Type="BlazorBootstrap.ButtonType.Button" Color="Duration == 2 ? ButtonColor.Primary : ButtonColor.Secondary" Size="ButtonSize.Small"
+					@onclick="() => UpdateReportingDateorInterval(null, null, 30,null, 2)">
+				30 Days
+			</Button>
+			<Button class="col-6  p-1  fw-bolder" Outline="true" Type="BlazorBootstrap.ButtonType.Button" Color="Duration == 3 ? ButtonColor.Primary : ButtonColor.Secondary" Size="ButtonSize.Small"
+						@onclick="() => UpdateReportingDateorInterval(null, null, 31*6,2, 3)">
+					6 Month
+				</Button>
+			<Button class="col-6  p-1  fw-bolder" Outline="true" Type="BlazorBootstrap.ButtonType.Button" Color="Duration == 0 ? ButtonColor.Primary : ButtonColor.Secondary" Size="ButtonSize.Small"
+				@onclick="() => {
+					customDate = true; 
+					Duration = 0;
+				}">
+				Custom..
+			</Button>
+		</div>
+
+		@if (customDate)
+		{
+			<div class="date-selector">
+				<MudDateRangePicker Class="date-selector" Color="Color.Dark" PickerClosed="() => UpdateReportingDateorInterval(SelectedDates.Start, SelectedDates.End,null, null, null)" PickerVariant="PickerVariant.Inline" MinDate="AvailableDates.Min()" MaxDate="AvailableDates.Max()" @bind-DateRange="SelectedDates" Clearable="false" Orientation="MudBlazor.Orientation.Portrait" />
+			</div>
+		}
+		@if(SelectedSections.Count() == 1)
+		{
+			<div class="m-2">
+				<Button Size="ButtonSize.Large" Active="!reportbusy" Class="w-100" Outline="true" @onclick="DownloadReport" Color="ButtonColor.Primary">
+				<div class="d-flex justify-content-center align-items-center">					
+					
+					@if (!reportbusy)
+						{
+						<Icon Name="IconName.FileSpreadsheet"></Icon>
+						<div class="ms-2">Download Report</div>
+					}
+					else
+					{
+						
+
+							<div class="loader-small"></div>
+							<div class="text-center ms-2">Processing</div>
+						
+		
+					}
+					</div>
+				</Button>
+			</div>
+		}
+		else
+
+		{
+			@* <div class="m-2">
+				<Button Size="ButtonSize.Large" Active="!reportbusy" Class="w-100" Outline="true" @onclick="DownloadReport" Color="ButtonColor.Primary">
+					<div class="d-flex justify-content-center align-items-center">
+
+						@if (!reportbusy)
+						{
+							<Icon Name="IconName.FileSpreadsheet"></Icon>
+							<div class="ms-2">Caution</div>
+						}
+						else
+						{
+
+
+							<div class="loader-small"></div>
+							<div class="text-center ms-2">Processing</div>
+
+
+						}
+					</div>
+				</Button>
+			</div> *@
+		}
+
+		<div class="m-2">
+			<Button Size="ButtonSize.Large" Class="w-100" Outline="true" @onclick="ToggleChartType" Color="ButtonColor.Primary">
+				<div class="d-flex justify-content-center align-items-end">	
+				<Icon Color="@(barChart == true ? IconColor.Secondary : IconColor.Danger)" Name="IconName.Line"></Icon>
+				<Icon Color="@(barChart == true ? IconColor.Danger : IconColor.Secondary)" Name="IconName.BarChartLineFill"></Icon>
+				<div class="ms-2">Chart Type</div>
+				</div>
+			</Button>
+		</div>
+	</div>
+
+	
+
+
+}
+ 
+@code {
+	/// <summary>
+	/// Gets the following Values:
+	/// Available Dates
+	///
+	/// Determines the following:
+	/// Available Sections for each mine
+	///
+	/// Sets the Following values:
+	/// Selected Mine
+	/// Selected Section
+	/// Selected Date From and Date To
+	/// Interval
+	///
+	///
+	/// Todo:
+	/// Get events per mine/section:
+	/// Update available dates for selected Mine/section
+	/// </summary>
+
+	private int? TopN = null;
+
+
+	[Parameter]
+	public List<DateTime> AvailableDates { get; set; }
+
+	[Parameter]
+	public List<Section>? AvailableSections { get; set; }
+	//	public List<Section>? sectionList { get; set; }
+
+	private int[] SelectedSections = [];
+
+	private string[] SelectedMines = [];
+
+	private DateRange? SelectedDates = new();
+
+	private int Interval = 0;
+
+	private int Duration = 1;
+	private List<(bool, Mine)>? CurrentMines = new List<(bool, Mine)>();
+	private List<(bool, Section)>? CurrentSections = new List<(bool, Section)>();
+
+	private static int defaultdays = -7;
+ 	//private DateTime from = DateTime.Now.AddDays(defaultdays); // Used to calculate the min date for which logs is available
+	//private DateTime to = DateTime.Now; 
+	private MudDateRangePicker _picker;
+	//private DateRange _dateRange = new DateRange(DateTime.Now.AddDays(defaultdays), DateTime.Now);
+	private bool showdate = true;
+	private bool reportbusy = false;
+
+	private bool barChart = false;
+	private bool customDate = false;
+
+	[Parameter] public EventCallback<ChangeEventArgs> onMineChange { get; set; }
+
+	[Parameter] public EventCallback<ChangeEventArgs> onSectionChange { get; set; }
+
+	[Parameter] public EventCallback<ChangeEventArgs> onDateChange { get; set; }
+
+	[Parameter] public EventCallback<ChangeEventArgs> onIntervalChange { get; set; }
+
+	[Parameter] public EventCallback<ChangeEventArgs> onTopNChange { get; set; }
+
+	[Parameter] public EventCallback<ChangeEventArgs> onChartTypeChange { get; set; }
+
+
+	private EventCallback intervalchanged;
+
+
+	IQueryable<Section> sections
+	{
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<Section>>("api/Sections"));
+				t.Wait();
+				return t.Result.OrderBy(s=>s.SectionName).AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+
+		}
+	}
+
+
+	IQueryable<Mine> mines
+	{
+		get
+		{
+			try
+			{
+				var t = Task.Run(async () => await http.GetFromJsonAsync<List<Mine>>("api/Mine"));
+				t.Wait();
+				return t.Result.AsQueryable();
+			}
+			catch
+			{
+				return null;
+			}
+
+		}
+	}
+
+
+	protected override async Task OnInitializedAsync()
+	{
+        if (AvailableDates.Any())
+		{
+		SelectedDates.End = AvailableDates.Max();
+		SelectedDates.Start = AvailableDates.Max().AddDays(defaultdays);
+		}
+
+		await UpdateAvailableMines();
+		await UpdateAvailableSections();
+	}
+
+	private async Task ToggleChartType()
+	{
+		barChart = !barChart;
+		await onChartTypeChange.InvokeAsync(new ChangeEventArgs() { Value = barChart });
+	}
+
+	private async Task UpdateAvailableMines()
+	{
+
+		if(mines.Any())
+		{
+			foreach (var mine in mines)
+			{
+				CurrentMines.Add((true, mine));
+			}
+			SelectedMines = CurrentMines.Select(s => s.Item2.MineName).ToArray();
+		}
+
+
+
+	}
+
+
+	private async Task UpdateAvailableSections()
+	{
+		CurrentSections.Clear();
+		if (SelectedMines != null && SelectedMines.Any())
+		{
+
+			Console.WriteLine();
+			foreach (var mineName in SelectedMines)
+			{
+				foreach (var section in sections.Where(s => s.Mine.MineName == mineName).AsNoTracking())
+				{
+					CurrentSections.Add((true, section));
+
+				}
+			}
+			SelectedSections = CurrentSections.Select(s => s.Item2.SectionId).ToArray();
+			await onSectionChange.InvokeAsync(new ChangeEventArgs() { Value = SelectedSections });
+
+		}
+
+
+	}
+
+	private async void UpdateMines(string[]? e)
+	{
+
+		if (e.Count() == 1 && e[0] ==  String.Empty )
+		{
+			SelectedMines = CurrentMines.Select(s => s.Item2.MineName).ToArray();
+		}
+		else
+		{
+			SelectedMines = e;
+		}
+		await UpdateAvailableSections();
+		//await onMineChange.InvokeAsync(new ChangeEventArgs() { Value = e });
+		await InvokeAsync(StateHasChanged);
+
+	}
+
+	private async Task UpdateSections(int[] e)
+	{
+		if (e == null )
+		{
+			SelectedSections = CurrentSections.Select(s => s.Item2.SectionId).ToArray();
+		}
+		else
+		{
+			SelectedSections = e;
+		}	
+
+		await onSectionChange.InvokeAsync(new ChangeEventArgs() { Value = SelectedSections });
+		await InvokeAsync(StateHasChanged);
+		UpdateDateRandePicker();
+	}
+
+
+
+
+	private void UpdateDateRandePicker()
+	{
+
+
+		if (AvailableDates.Any())
+		{
+			if (SelectedDates.End > AvailableDates.Max())
+			{
+				SelectedDates.End = AvailableDates.Max();
+			}
+			if (SelectedDates.Start < AvailableDates.Min())
+			{
+				SelectedDates.Start = AvailableDates.Min();
+			}
+		}
+	}
+
+
+
+	private async Task UpdateReportingDateorInterval(DateTime? dfrom, DateTime? dto, double? durationDays, int? reportinterval, int? duration)
+	{
+
+		await InvokeAsync(StateHasChanged);
+		if (duration != null)
+		{
+			Duration = (int)duration;
+			if (duration != 0)
+			{
+				customDate = false;
+			}
+		}
+
+		if (reportinterval != null)
+		{
+			Interval = (int)reportinterval;
+			await onIntervalChange.InvokeAsync(new ChangeEventArgs() { Value = reportinterval });
+		}
+		if (dfrom != null)
+		{
+			SelectedDates.Start = dfrom;
+
+		}
+		if (dto != null)
+		{
+			SelectedDates.End = dto;
+
+		}
+		if (durationDays != null )
+		{
+
+
+			SelectedDates.End = AvailableDates.Max();
+			SelectedDates.Start = AvailableDates.Max().AddDays(- (double)durationDays);
+		} 
+		if (durationDays != null || dfrom != null || dto != null)
+		{
+
+			UpdateDateRandePicker();
+			await onDateChange.InvokeAsync(new ChangeEventArgs() { Value = SelectedDates });
+		}
+
+
+		await InvokeAsync(() => StateHasChanged());
+
+	}
+
+
+	private async Task UpdateTopN(int? e)
+	{
+		TopN = e;
+		await onTopNChange.InvokeAsync(new ChangeEventArgs() { Value = TopN });
+		await InvokeAsync(StateHasChanged);
+	}
+
+
+	public async void DownloadReport()
+	{
+
+	
+		List<int> sheets = new();
+		sheets.Add(0);
+		sheets.Add(1);
+		sheets.Add(3);
+		sheets.Add(6);
+		sheets.Add(10);
+		reportbusy = true;
+		await InvokeAsync(StateHasChanged);
+		foreach (var section in SelectedSections)
+		{
+
+
+		byte[]? response = null;
+		var tempstring = "api/File/excelreportbysectionanddate?";
+		foreach (var sheet in sheets)
+		{
+			tempstring += $"sheets={sheet}&";
+		}
+		//tempstring = tempstring.Remove(tempstring.Length - 1);
+		tempstring += $"sectionID={section}&";
+		tempstring += $"start={((DateTime)SelectedDates.Start).ToShortDateString()}&";
+		tempstring += $"end={((DateTime)SelectedDates.End).ToShortDateString()}";
+
+		var result = await http.GetAsync($"{tempstring}");
+		
+		if (result.IsSuccessStatusCode)
+		{
+			var file = await result.Content.ReadFromJsonAsync<MatrixFile>();
+
+			try
+			{
+				await js.InvokeVoidAsync("BlazorDownloadFile", $"{file.FileName}.xlsx" , file.FileContent);
+
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
+			}
+		}
+
+		}
+		reportbusy = false;
+		await InvokeAsync(StateHasChanged);
+	}
+
+
+} 

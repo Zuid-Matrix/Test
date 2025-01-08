@@ -1,0 +1,373 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@inject NavigationManager MyNavigationManager
+@inject NavigationManager uriHelper
+@using System.Threading.Tasks
+@using Microsoft.AspNetCore.SignalR.Client
+@inject HubConnection hubConnection 
+@using System.Drawing
+@using Newtonsoft.Json
+@using Blazor_Layout = Plotly.Blazor.Layout
+@using Title = Plotly.Blazor.LayoutLib.Title
+@using YAxis = Plotly.Blazor.LayoutLib.YAxis
+@using Mode = Plotly.Blazor.LayoutLib.ModeBar
+@using Plotly.Blazor.LayoutLib
+@using Plotly.Blazor.LayoutLib.XAxisLib
+@inject HttpClient http
+
+<PageTitle>Antenna Plot</PageTitle>
+
+
+
+@if (ControllerReport != null)
+{
+ <h6>Antenna:</h6>
+	<InputSelect class="form-select" 
+		TValue="int"
+		Value="SelectedAntenna"
+		ValueChanged="SelectAntenna"
+		ValueExpression="@(() => SelectedAntenna)">
+	<option value = 1 > Antenna 1</option>
+	<option value = 2 > Antenna 2</option>
+	</InputSelect> 
+	<h6>Best or worst readings:</h6>
+	<select class="form-select" style="width:auto" @onchange="SelectMinMax" value>
+		<option value=1> Best </option >
+		<option value=2>Worst</option>
+	</select>
+
+		@* <button type="button" @onclick="Export" this>Export and Clear</button> *@
+}
+
+@if(plotlyAntennaData != null)
+{
+		if (plotlyAntennaData.Count() >0)
+		{
+			<PlotlyChart style="height: 60vh; min-height: 600px" Layout="layout" Config="config" Data="plotlyAntennaData"  @ref="heatMapChart" />
+		}
+}
+
+
+
+
+@code {
+
+	[Parameter]
+	public BlazorControllerReport ControllerReport { get; set; }
+
+	private float ft = (float)3.28084;
+	private float? syncratems = (float)0.0;
+	private ulong? previoustimestamp = 0;
+	private List<int>? plotX;
+	private List<int>? plotY;
+	private int SelectedAntenna = 1;
+	private int MinMax = 0; //0 = minimum/best value
+	private System.Threading.Timer? timer; // NOTE: THIS LINE OF CODE ADDED
+	private static bool firstlive = true;
+	//private List<AntennaPoint> antennamap = new();
+	private string controllerIP = "";
+	Layout? layout;
+	Config? config;
+
+	private static IList<object> X0 = new List<object>();
+	private static IList<object> Y0 = new List<object>();
+	private static IList<object> Z0 = new List<object>();
+	private string status = "Start";
+
+	PlotlyChart? heatMapChart; //Chart
+	IList<ITrace>? plotlyAntennaData; //Trace List
+	static HeatMap heatMap = new HeatMap  //Trace
+	{
+			Name = "Antenna 1 Max",
+			ColorScale = new[]
+				{
+
+				new [] {"0", "#ED1C24"},
+				new [] {"1", "#77ED26"}
+			},
+
+	};
+
+
+	protected override async Task OnInitializedAsync()
+	{
+
+		layout = new Layout
+			{
+				Title = new Title
+				{
+					Text = "Antenna Heatmap"
+				},
+				Annotations = new List<Annotation>(),
+				XAxis = new List<XAxis>
+			{
+				new ()
+				{
+					Ticks = Plotly.Blazor.LayoutLib.XAxisLib.TicksEnum.Empty,
+					Side = Plotly.Blazor.LayoutLib.XAxisLib.SideEnum.Top
+				}
+			},
+				YAxis = new List<YAxis>
+			{
+				new ()
+				{
+					Ticks = Plotly.Blazor.LayoutLib.YAxisLib.TicksEnum.Empty,
+					TickSuffix = " ",
+				}
+			}
+			};
+
+		config = new Config
+			{
+				ShowLink = false,
+				Responsive = true,
+				DisplayLogo = false
+			};
+
+
+
+		System.Globalization.CultureInfo.CurrentCulture = CultureInfo.InvariantCulture; // CultureInfo.GetCultureInfo("");
+																						//await clientHub.initiateHub();
+																						//await clientMatrixDevices.StartupControllers();
+
+		plotlyAntennaData = Initialize();
+		//AddAnnotations(layout, plotlyAntennaData.First());
+		if (heatMapChart != null)
+		{
+			await heatMapChart.React();
+		}
+
+
+	}
+
+
+
+	protected override async Task OnParametersSetAsync()
+	{
+
+		if (ControllerReport != null && ControllerReport.AntennaMap != null && ControllerReport.AntennaMap != null && ControllerReport.AntennaMap.AtennaPoints != null && ControllerReport.AntennaMap.AtennaPoints.Count()  > 0)
+		{
+			if (heatMap != null)
+			{
+				var temp = UpdateMap(heatMap);
+
+				if (heatMapChart != null && temp)
+				{
+					AddAnnotations(layout, plotlyAntennaData.First());
+					await heatMapChart.React();
+
+				}
+			}
+		}
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+
+	IList<ITrace> Initialize()
+	{
+		IList<ITrace> mapData = new List<ITrace>();
+
+
+		plotX = Enumerable.Range(-5, 10).ToList();
+		plotY = Enumerable.Range(-5, 10).ToList();
+		X0 = plotX.ToArray().Cast<object>().ToList();
+		Y0 = plotX.ToArray().Cast<object>().ToList();
+
+
+		List<int?[]> Z = new();
+		foreach (var row in plotY)
+		{
+			List<int?> z = new();
+			foreach (var column in plotX)
+			{
+				z.Add(null);
+			}
+			Z.Add(z.ToArray());
+		}
+
+
+		Z0 = Z.ToArray().Cast<object>().ToList();
+
+
+		heatMap.X = X0;
+		heatMap.Y = Y0;
+		heatMap.Z = Z0;
+
+		mapData.Add(heatMap);
+
+		return mapData;
+	}
+
+	bool UpdateMap(HeatMap trace)
+	{
+		bool update = false;
+		if (ControllerReport != null && ControllerReport.AntennaMap != null && ControllerReport.AntennaMap.AtennaPoints != null && ControllerReport.AntennaMap.AtennaPoints.Count() > 0)
+		{
+			var antennamap = ControllerReport.AntennaMap.AtennaPoints;
+			var Ymin = (int)antennamap.Select(s => s.Y).Min() > -5 ? -5 : (int)antennamap.Select(s => s.Y).Min()-5;
+			var Xmin = (int)antennamap.Select(s => s.X).Min() > -5 ? -5 : (int)antennamap.Select(s => s.X).Min()-5;
+			var Ymax = (int)antennamap.Select(s => s.Y).Max() < 5 ? 5 : (int)antennamap.Select(s => s.Y).Max()+5;
+			var Xmax = (int)antennamap.Select(s => s.X).Max() < 5 ? 5 : (int)antennamap.Select(s => s.X).Max()+5;
+			var rangeX = Xmin < 0 ? Xmax + (-1) * Xmin : Xmax - Xmin;
+			var rangeY = Ymin < 0 ? Ymax + (-1) * Ymin : Ymax - Ymin;
+			plotX = Enumerable.Range(Xmin, rangeX <= 10 ? 10 : rangeX).ToList();
+			plotY = Enumerable.Range(Ymin, rangeY <= 10 ? 10 : rangeY).ToList();
+
+			List<int> currentY = trace.Y.Cast<int>().ToList();
+			List<int> currentX = trace.X.Cast<int>().ToList();
+			List<int?[]> currentZ = trace.Z.Cast<int?[]>().ToList();
+
+			var newYvalues = plotY.Except(currentY).ToList();
+			var newXvalues = plotX.Except(currentX).ToList();
+			if (newXvalues.Any() || newYvalues.Any())
+			{
+				update = true;
+			}
+
+
+			List<int?[]> Z = new();
+			layout.Annotations.Clear();
+			foreach (var row in plotY)
+			{
+				//object tempobject = trace.Z.ElementAt<object>(rowindex);
+				List<int?>? prevZrow = new();
+				if (currentZ.Any())
+				{
+					try
+					{
+
+
+						prevZrow = currentZ.ElementAt(row - Ymin).ToList();
+					}
+					catch (System.ArgumentOutOfRangeException e)
+					{
+						prevZrow = null;
+					}
+				}
+
+				List<int?> z = new();
+				foreach (var column in plotX)
+				{
+					var Tempdata = antennamap.FirstOrDefault(s => s.X == column && s.Y == row);
+
+					if (Tempdata != null)
+					{
+						int? value = 0;
+						if (SelectedAntenna == 1)
+						{
+							value = MinMax == 2 ? Tempdata.Ant1_rmdb_max : Tempdata.Ant1_rmdb_min;
+						}
+						else
+						{
+							value = MinMax == 2 ? Tempdata.Ant2_rmdb_max : Tempdata.Ant2_rmdb_min;
+						}
+
+						z.Add(value);
+						if (prevZrow != null)
+						{
+							try
+							{
+								var elemt = prevZrow.ElementAt(column - Xmin);
+								if (value != elemt)
+								{
+									update = true;
+								}
+							}
+							catch (Exception e)
+							{
+								Console.WriteLine(e);
+								update = true;
+							}
+						}
+						else
+						{
+							update = true;
+						}
+
+
+					}
+					else
+					{
+						z.Add(null);
+					}
+
+
+				}
+				Z.Add(z.ToArray());
+			}
+
+			if (update)
+			{
+				Z0 = Z.ToArray().Cast<object>().ToList();
+				X0 = plotX.ToArray().Cast<object>().ToList();
+				Y0 = plotY.ToArray().Cast<object>().ToList();
+				trace.Z = Z0;
+				trace.X = X0;
+				trace.Y = Y0;
+			}
+		}
+		return update;
+	}
+
+
+
+
+
+
+
+	private void SelectAntenna(int e)
+	{
+
+		X0.Clear();
+		Y0.Clear();
+		Z0.Clear();
+		layout.Annotations.Clear();
+		SelectedAntenna = e;
+
+	}
+
+	private void SelectMinMax(ChangeEventArgs e)
+	{
+
+		X0.Clear();
+		Y0.Clear();
+		Z0.Clear();
+		layout.Annotations.Clear();
+		MinMax = Convert.ToInt16(e.Value);
+
+	}
+
+	static void AddAnnotations(Layout layout, ITrace trace)
+	{
+		if (trace is not HeatMap { Z: List<object> zValues } heatMap) return;
+
+
+		layout.Annotations.Clear();
+		for (var i = 0; i < heatMap.Y.Count; i++)
+		{
+			for (var j = 0; j < heatMap.X.Count; j++)
+			{
+				var currentValue = ((int?[])zValues[i])[j];
+				var textColor = currentValue != 0.0 ? "white" : "black";
+
+				var result = new Annotation
+					{
+						XRef = "x1",
+						YRef = "y1",
+						X = heatMap.X[j],
+						Y = heatMap.Y[i],
+						Text = currentValue.HasValue ? currentValue.Value.ToString(CultureInfo.InvariantCulture) : string.Empty,
+						Font = new Plotly.Blazor.LayoutLib.AnnotationLib.Font
+						{
+							Family = "Arial",
+							Size = 16,
+							Color = textColor
+						},
+						ShowArrow = false,
+					};
+				layout.Annotations.Add(result);
+			}
+		}
+	}
+}
+ 

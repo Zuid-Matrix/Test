@@ -1,0 +1,51 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+
+
+
+
+
+
+
+		<div class="info-display-block background-inherit align-content-center">
+			<div>
+				@if (tempList != null)
+				{
+					<QuickGrid class="table-bordered background-inherit" Items="@tempList.AsQueryable()" TGridItem="MatrixTableChartData" Pagination="@pagination">
+						<PropertyColumn Property="@(p => p.Category)"  Title="@Label" Sortable="true" />
+						<PropertyColumn Property="@(p =>  $"{Math.Round((decimal)p.value,1)}{Unit}")" Title="@Title" Sortable="true" />
+					</QuickGrid>
+					<Paginator State="@pagination" />
+				}
+
+			</div>
+		</div>
+
+
+
+
+	
+
+
+
+@code {
+
+
+	[Parameter]
+	public List<MatrixTableChartData>? tempList { get; set; }
+
+	PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+	[Parameter]
+	public string Title { get; set; }
+
+
+
+	[Parameter]
+	public string Label { get; set; }
+
+
+	[Parameter]
+	public string Unit { get; set; }
+
+
+}

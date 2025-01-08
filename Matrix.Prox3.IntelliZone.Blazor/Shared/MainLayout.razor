@@ -1,0 +1,95 @@
+﻿@inherits LayoutComponentBase
+@using MudBlazor
+@using Microsoft.AspNetCore.SignalR.Client
+@inject HubConnection hubConnection 
+@inject IConfiguration _config
+@inject ILogger<MainLayout> logger
+@implements IDisposable
+
+<div class="page container-fluid ps-0 ms-0">
+	<div class="top-row d-flex align-items-center">
+		<img class="full100 collapsedIcon" src="/IntelliZone-Logo-1.jpg" />
+		@if (_config["AppConfiguration"] == "CageCounter" && dateTime != null)
+		{
+			<div class="align-text-bottom" style="font-size:30px">
+				@dateTime
+			</div>
+		}
+		else
+		{
+			<div class="m-2">
+				<NeedHelp />
+			</div>
+
+			<RunningTasks />
+			<div class="auth">
+				<LoginDisplay />
+			</div>
+		}
+	</div>
+	<div class="row flex-nowrap ms-0 me-0">
+		@if (_config["AppConfiguration"] != "CageCounter")
+		{
+			<div class="col-auto">
+				<NavMenu />
+			</div>
+		}
+		<div class="col py-3">
+			<div id="body">
+				@Body
+			</div>
+		</div>
+	</div>
+</div>
+<Toasts class="p-3" AutoHide="true" Delay="4000" Placement="ToastsPlacement.TopRight" />
+
+@code{
+
+	private DateTime dateTime;
+
+	protected override async Task OnInitializedAsync()
+	{
+		try{
+			hubConnection.On<DateTime>("intellizonelocalhost", async (data) =>
+		{
+
+			dateTime = data;
+			await InvokeAsync(StateHasChanged);
+		});
+		}
+		catch (ObjectDisposedException) {
+            logger.LogError("Hub Connection was disposed");
+		}
+		
+		try
+		{
+			if (hubConnection.State == HubConnectionState.Disconnected)
+			{
+				await hubConnection.StartAsync();
+				logger.LogInformation($"Hub Started {hubConnection.State} - {hubConnection.ConnectionId}");
+				Task.Delay(500).Wait();
+			}
+		}
+		catch (Exception e)
+		{
+			logger.LogError(e.ToString());
+			Console.WriteLine(e);
+		}
+	}
+
+	public async  void Dispose()
+	{
+
+		if (hubConnection != null )
+		{
+			await  hubConnection.DisposeAsync();
+			logger.LogInformation($"Hub disposed - {hubConnection.ConnectionId}");
+		}
+		else
+		{
+			logger.LogInformation($"Hub was null");
+		}
+
+    }
+
+}

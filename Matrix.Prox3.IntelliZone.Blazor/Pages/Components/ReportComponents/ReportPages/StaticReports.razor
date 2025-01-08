@@ -1,0 +1,115 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using System.IO.Compression
+@using Matrix.Prox3.IntelliZone.Data.Reporting
+@using System.Threading.Tasks
+@using System.Globalization
+@using Matrix.Prox3.IntelliZone.Data.Models
+@using Matrix.Prox3.IntelliZone.Data.Models.Reporting
+@using ClosedXML
+@using MudBlazor
+@using ClosedXML.Excel
+@using Newtonsoft.Json.Serialization
+@using System.Diagnostics
+@using Matrix.Prox3.IntelliZone.Data.VolatileStorage
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Matrix.Prox3.IntelliZone.Data.Models.MatrixChart
+@inject HttpClient http
+@inject IJSRuntime js
+
+
+
+<div class="">
+	<AuthorizeView>
+		<Authorized>
+			
+
+		@if (busy == false )
+		{
+
+				<Button Size="ButtonSize.Medium" Type="BlazorBootstrap.ButtonType.Button" Outline="true" Color="ButtonColor.Primary"
+						@onclick="@(() =>
+                        {
+                            var options = new ModalOptions()
+			                {
+				                Size = Blazored.Modal.ModalSize.Large
+			                };
+                            Modal.Show<ReportModal>("Edit Report",options);
+                        }
+                       )">
+					Add Reports
+				</Button>
+
+			<div class="info-display-block container-fluid rounded-xl">
+
+				@if (Reports != null && Reports.Any())
+			{
+	              
+							<div class="m-4">
+		<div class="page-size-chooser">
+			Items per page:
+			<select @bind="@pagination.ItemsPerPage">
+				<option>10</option>
+				<option>20</option>
+				<option>50</option>
+				<option>100</option>
+				<option>200</option>
+			</select>
+		</div>
+
+
+		<QuickGrid class="table-bordered transparent-table" Items="@Reports.AsQueryable()" TGridItem="Report" Pagination="@pagination">
+			<Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Property="@(p => p.description)" Title="Mine" Sortable="true" ></Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn>
+
+		</QuickGrid>
+		</div>
+			<Paginator State="@pagination" />
+
+			}
+			else
+			{
+				<p>No data for the dates selected</p>
+			}
+
+	 	</div>
+
+		}
+		else
+		{
+	
+				<NoData />
+
+
+			}
+	</Authorized>
+	<NotAuthorized>
+		Please login to view this page
+		</NotAuthorized>
+	</AuthorizeView>
+
+</div>
+
+
+
+
+
+@code {
+	[CascadingParameter] public IModalService Modal { get; set; } = default!;
+	private bool isLoading = false;
+
+	[Parameter]
+	public List<Report>? Reports { get; set; }
+
+
+
+
+
+
+	PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+
+	private bool busy = false;
+
+
+
+
+}

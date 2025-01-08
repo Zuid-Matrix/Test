@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121.
+-->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>C:\Users\zuidera\source\repos\DataSaint\Matrix.Prox3.IntelliZone\Matrix.Prox3.IntelliZone.Blazor\bin\Release\net8.0\publish\</_PublishTargetUrl>
+    <History>True|2024-11-21T16:05:31.2161938Z||;True|2024-11-21T15:53:14.4216664+02:00||;True|2024-11-20T22:20:33.2811010+02:00||;True|2024-11-20T15:02:48.7113215+02:00||;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+</Project>

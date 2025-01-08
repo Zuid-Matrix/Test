@@ -1,0 +1,33 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+
+
+<a href="@referenceString">Request a feature</a>
+
+
+@code{
+
+    [Parameter]
+    public string? page { get; set; }
+
+    private string? subject = "subject=";
+
+    private string? body = "&body=";
+
+    private string? referenceString = "mailto:support@datasaint.com?";
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        subject += "IntelliZone Project - ??ADD YOUR TOPIC HERE??";
+
+        body += $"Add Feature to IntelliZone Reporting%0D%0A%0D%0AFeature Type:%0D%0AReporting%0D%0A%0D%0ADescription:%0D%0??ADD YOUR DESCRIPTION HERE??A%0D%0A%0D%0ADo you have any screenshots/examples/attachments?%0D%0A%0D%0AOrigin of this request{page}";
+
+        referenceString += subject;
+        referenceString += body;
+
+
+    }
+
+    }
+
+@* <a href="mailto: client@abcwidgets.com?Subject=I'd%20like%20to%20attend%20the%20event&Body=Name:%0D%0APhone%20Number:%0D%0ABlah%20blah">client@abcwidgets.com</a> *@

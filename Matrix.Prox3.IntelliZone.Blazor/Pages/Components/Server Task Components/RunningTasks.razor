@@ -1,0 +1,73 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Microsoft.EntityFrameworkCore
+@using System.Threading.Tasks
+@using System.Drawing
+@using System.Data
+@using Microsoft.AspNetCore.SignalR.Client
+@inject HubConnection hubConnection
+
+
+
+
+		<div class="info-display-block2 d-flex align-items-center">
+		@if (packages > 0 || summaries > 0 )
+		{
+			<span class="loader-small"></span>
+			<div class="ms-2 me-2">
+				Packages: @packages
+			</div>
+			<div>
+				Summaries: @summaries
+			</div>
+
+		}
+		else
+		{
+			<div>
+				<span class="oi oi-check"></span>
+				Synced
+			</div>
+		}
+		</div>
+	
+	
+
+
+	
+
+
+
+
+
+@code {
+
+
+	
+	int packages = 0;
+	int summaries = 0;
+
+
+	protected override async Task OnInitializedAsync()
+	{
+
+		hubConnection.On<int, int>("logstatus", async (data, data2) =>
+		{
+			packages = data;
+			summaries = data2;
+			await InvokeAsync(StateHasChanged);
+
+		});
+	}
+
+
+
+	public void Dispose()
+	{
+
+		
+	
+
+	}
+
+
+}

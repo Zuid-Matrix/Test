@@ -1,0 +1,464 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+
+<PageTitle>IntelliZone RF Calculator</PageTitle>
+<div class="p-1">
+    <div class="d-flex mb-2">
+
+        <div class="w-75 rounded-xl p-3 d-flex align-items-center">
+    
+                <h3>Controller Port Output Power:</h3>
+
+   
+            <div class="d-flex flex-column justify-items-center mx-auto">
+                <input type="range" min="60" max="110" width="400" id="myRange" @onchange=InputPowerChange>
+                <div class ="mt-2">
+
+                    <h4 >@_RFInput_mW mW/ @_RFInput_dB dBm</h4>
+
+                </div>
+               
+                
+            </div>
+        </div>
+
+
+        <div class="w-50 rounded-xl ms-2 d-flex flex-row align-items-center">
+            <div class="mx-auto ">
+                <h3 >Expected RF Power:</h3>
+            </div>
+            <div class="mx-auto ">
+                <h4 >@Math.Round(_RFOutput_mW,2) mW/ @Math.Round(_RFOutput,2) dBm</h4>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="table-container">
+        <div class="d-flex w-full">
+            <div class="col-6">
+                <p>No. of 1m Jumpers:</p>
+            </div>
+            <div class="">
+                <input class="" type="number" min="0" max="1" width="400" id="myRange" style=" text-align:end" @bind=_Num1MJumpers>
+
+            </div>
+        </div>
+
+        <div class="d-flex h-20 w-full">
+            <div class="col-6">
+
+                <p>No. of 2m Jumpers:</p>
+            </div>
+            <div class="">
+                <input type="number" min="0" max="1" width="400" id="myRange" style="text-align:end"  @bind=_Num2MJumpers>
+
+            </div>
+        </div>
+
+        <div class="d-flex h-20 w-full">
+            <div class="col-6">
+
+                <p>No. of 4m Jumpers:</p>
+            </div>
+            <div class="" >
+                <input type="number" min="0" max="1" width="400" id="myRange" style="text-align:end" @bind=_Num4MJumpers>
+
+            </div>
+        </div>
+
+        <div class="d-flex h-20 w-full">
+            <div class="col-6">
+
+                <p>No. of RF Barriers:</p>
+            </div>
+            <div class="">
+                <input type="number" min="0" max="1" width="400" id="myRange" style=" text-align:end"  @bind=_NumRFBarriers>
+
+            </div>
+        </div>
+
+
+        <div class="d-flex h-20 w-full">
+            <div class="col-6">
+
+                <p>No. of RF Isolators = @_RFIsolatorsAtt dB</p>
+            </div>
+            <div class="">
+                <input type="number" min="0" max="7" width="400" id="myRange" style="text-align:end" @bind=_NumRFIsolators>
+
+            </div>
+        </div>
+
+        <div class="d-flex">
+            <div class="col-6">
+
+                <p>No. of Connectors(ex. barriers and jumper's connectors):</p>
+            </div>
+            <div class="">
+                <input type="number" min="0" max="3" style=" text-align:end" @bind=_NumConnectors>
+
+            </div>
+        </div>
+
+        <div class="d-flex">
+            <div class="col-6">
+
+                <p>Length of LMR195(m)</p>
+            </div>
+            <div class="">
+                <input type="number" min="0" max="15" id="myRange" style="text-align:end" @bind=@_LMR195Length_m>m
+
+            </div>
+        </div>
+
+        <div class="d-flex h-20 w-full">
+            <div class="col-6">
+
+                <p>Length of LMR400(m) = @_LMR400Att dB</p>
+            </div>
+            <div class="">
+                <input type="number" min="0" max="15"  id="myRange" style="text-align:end" @bind=@_LMR400Length_m>
+
+            </div>
+        </div>
+
+
+
+        <div class="d-flex h-20 w-full">
+            <div class="col-6">
+
+                <p>Length of LMR240(m) = @_LMR240Att dB</p>
+            </div>
+            <div class="" >
+                <input type="number" min="0" max="15" id="myRange" style=" text-align:end" @bind=@_LMR240Length_m>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@*    <div class="flex w-2/3 h-28 rounded-lg content-stretch" style="background-Color:darkgrey">
+        <div class="text-2xl ml-6 my-auto">
+            <p c style="Color:aliceblue">Controller Port Output Power:</p>
+        </div>
+        <div class="text-2xl my-auto mx-auto">
+            <p style="Color:lightgray">@_RFInput_mW mW/ @_RFInput_dB dBm</p>
+            <input type="range" min="60" max="110" width="400" id="myRange" @onchange=InputPowerChange>
+        </div>
+    </div>
+    <div class="flex w-1/3 h-28 grid grid-rows-2 rounded-lg content-stretch" style="background-Color:darkblue">
+        <div class="text-2xl ml-6 my-auto mx-auto ">
+            <p style="Color:aliceblue">Expected RF Power:</p>
+        </div>
+        <div class="text-2xl my-auto mx-auto ">
+            <p style="Color:lightgray">@_RFOutput_mW/ @_RFOutput dBm</p>
+        </div>
+    </div>
+</div>*@
+
+
+@code
+{
+    private const double FEET_PER_METER = 3.28084;
+    private const double LMR195_ATTENUATION_PER_100FT_A = 0.356859;
+    private const double LMR195_ATTENUATION_PER_100FT_B = 0.000470;
+    private const double LMR240_ATTENUATION_PER_100FT_A = 0.242080;
+    private const double LMR240_ATTENUATION_PER_100FT_B = 0.000330;
+    private const double LMR400_ATTENUATION_PER_100FT_A = 0.122290;
+    private const double LMR400_ATTENUATION_PER_100FT_B = 0.000260;
+    private const double CONNECTOR_ATTENUATION          = 0.1;
+    private const double BARRIER_ATTENUATION            = 0.3;
+    private const double RF_ISOLATOR_ATTENUATION = 0.5;
+    private double LMR195_ATTENUATION_PER_M = 0.0;
+    private double LMR240_ATTENUATION_PER_M = 0.0;
+    private double LMR400_ATTENUATION_PER_M = 0.0;
+    private double JUMPER_1M_ATTENUATION    = 0.0;
+    private double JUMPER_2M_ATTENUATION = 0.0;
+    private double JUMPER_4M_ATTENUATION = 0.0;
+
+
+    private double  _RFInput_mW = 63.0;
+    private double  _RFOutput = 0.0;
+    private double  _RFOutput_mW = 0.0;
+
+
+    private int  _numRFBarriers = 1;
+    public int _NumRFBarriers
+    {
+        get
+        {
+            return _numRFBarriers;
+        }
+        set
+        {
+            _numRFBarriers = value;
+            ComputeOutputPower();
+            this.StateHasChanged();
+        }
+    }
+
+
+
+    private double  _RFBarriersAtt = 0.0;
+
+
+    private int _numRFIsolators = 0;
+    public int _NumRFIsolators
+    {
+        get
+        {
+            return _numRFIsolators;
+        }
+        set
+        {
+            _numRFIsolators = value;
+            ComputeOutputPower();
+            this.StateHasChanged();
+        }
+    }
+
+
+
+    private double _RFIsolatorsAtt = 0.0;
+
+
+
+
+
+    private double  _RFInput_dB = 0.0;
+
+    private double  _lmr195Length_m = 0.0;
+    public double _LMR195Length_m
+    {
+        get
+        {
+            return _lmr195Length_m;
+        }
+        set
+        {
+            _lmr195Length_m = value;
+            ComputeOutputPower();
+            this.StateHasChanged();
+        }
+    }
+
+    private double _LMR195Att = 0.0;
+
+    private double _lmr240Length_m = 0.0;
+    public double _LMR240Length_m
+    {
+        get
+        {
+            return _lmr240Length_m;
+        }
+        set
+        {
+            _lmr240Length_m = value;
+            ComputeOutputPower();
+            this.StateHasChanged();
+        }
+    }
+
+    private double _LMR240Att = 0.0;
+    
+    private double _lmr400Length_m = 0.0;
+    public double _LMR400Length_m
+    {
+        get
+        {
+            return _lmr400Length_m;
+        }
+        set
+        {
+            _lmr400Length_m = value;
+            ComputeOutputPower();
+            this.StateHasChanged();
+        }
+    }
+    private double  _LMR400Att = 0.0;
+
+
+    private double  _1MJumpersAtt = 0.0;
+
+
+    private double  _2MJumpersAtt = 0.0;
+    private double _4MJumpersAtt = 0.0;
+
+    private double _ConnectorsAtt = 0.0;
+    private int _num1MJumpers = 0;
+    public int _Num1MJumpers
+    {
+        get
+        {
+            return _num1MJumpers;
+        }
+        set
+        {
+            _num1MJumpers = value;
+            ComputeOutputPower();
+            this.StateHasChanged();
+        }
+    }
+
+    private int     _num2MJumpers = 0;
+    public int _Num2MJumpers
+    {
+        get
+        {
+            return _num2MJumpers;
+        }
+        set
+        {
+            _num2MJumpers = value;
+            ComputeOutputPower();
+            this.StateHasChanged();
+        }
+    }
+    private int _num4MJumpers = 0;
+    public int _Num4MJumpers
+    {
+        get
+        {
+            return _num4MJumpers;
+        }
+        set
+        {
+            _num4MJumpers = value;
+            ComputeOutputPower();
+            this.StateHasChanged();
+        }
+    }
+
+    private int _numconnectors = 0;
+    public int     _NumConnectors
+    {
+        get 
+        {
+            return _numconnectors;
+        }
+        set 
+        {
+            _numconnectors = value;
+            ComputeOutputPower();
+            this.StateHasChanged();
+        }
+    }
+    private int     _Frequency = 2400;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // calculate the attenuation per meter of the common cable types (from datasheet)
+        LMR195_ATTENUATION_PER_M = FEET_PER_METER * (LMR195_ATTENUATION_PER_100FT_A * Math.Sqrt((double)_Frequency) +
+            LMR195_ATTENUATION_PER_100FT_B * (double)_Frequency) / (100.0);
+        LMR240_ATTENUATION_PER_M = FEET_PER_METER * (LMR240_ATTENUATION_PER_100FT_A * Math.Sqrt((double)_Frequency) +
+             LMR240_ATTENUATION_PER_100FT_B * (double)_Frequency) / (100.0);
+        System.Diagnostics.Debug.WriteLine("LMR195 Attenuation Per 100 m {0:F2}", LMR195_ATTENUATION_PER_M * 100.0);
+        LMR400_ATTENUATION_PER_M = FEET_PER_METER * (LMR400_ATTENUATION_PER_100FT_A * Math.Sqrt(_Frequency) +
+            LMR400_ATTENUATION_PER_100FT_B * _Frequency) / (100);
+
+        // calculate the attuenuation of the common jumper cables (1 and 2m lengths)
+        JUMPER_1M_ATTENUATION = LMR195_ATTENUATION_PER_M + 2 * CONNECTOR_ATTENUATION;
+        JUMPER_2M_ATTENUATION = LMR195_ATTENUATION_PER_M * 2 + 2 * CONNECTOR_ATTENUATION;
+        JUMPER_4M_ATTENUATION = LMR195_ATTENUATION_PER_M * 3 + 2 * CONNECTOR_ATTENUATION;
+        _RFInput_dB = MilliwattToDBm(_RFInput_mW);
+
+        await ComputeOutputPower();
+    }
+
+
+    // TODO: add public bindable properties
+    // TODO: determine a range of good RF outputs and inputs
+    // TODO: test against real values
+    //public string RFInputString
+    //{
+    //    get
+    //    {
+    //        return _RFInput_mW.ToString();
+    //    }
+    //    set
+    //    {
+    //        _RFInput_mW = Convert.ToDouble(value);
+    //        //   OnPropertyChanged(nameof(RFInputString));
+    //    }
+    //}
+    //public string RFInputdBmString
+    //{
+    //    get
+    //    {
+    //        return _RFInput_dB.ToString();
+    //    }
+    //    set
+    //    {
+    //        _RFInput_dB = Convert.ToDouble(value);
+    //        //  OnPropertyChanged(nameof(RFInputdBmString));
+    //    }
+    //}
+    //public string LMR195String { get; set; }
+    //public string LMR400String { get; set; }
+
+    //public string RFOutputString
+    //{
+    //    get { return _RFOutput.ToString(); }
+    //    set
+    //    {
+    //        _RFOutput = Convert.ToDouble(value);
+    //        //  OnPropertyChanged(nameof(RFOutputString));
+    //    }
+    //}
+    //public string RFOutputmWString
+    //{
+    //    get { return _RFOutput_mW.ToString(); }
+    //    set
+    //    {
+    //        _RFOutput_mW = Convert.ToDouble(value);
+    //        //  OnPropertyChanged(nameof(RFOutputmWString));
+    //    }
+    //}
+
+    private double MilliwattToDBm(double power)
+    {
+        return Math.Round(10 * Math.Log10(power),2);
+    }
+
+    private double DBmToMilliwatt(double dbm)
+    {
+        return Math.Pow(10, (dbm / 10));
+    }
+
+    private Task ComputeOutputPower()
+    {
+        _RFInput_dB = MilliwattToDBm(_RFInput_mW);
+        _RFBarriersAtt = _NumRFBarriers * BARRIER_ATTENUATION;
+        _RFIsolatorsAtt = _NumRFIsolators * RF_ISOLATOR_ATTENUATION;
+        _1MJumpersAtt = _Num1MJumpers * JUMPER_1M_ATTENUATION;
+        _2MJumpersAtt = _Num2MJumpers * JUMPER_2M_ATTENUATION;
+        _4MJumpersAtt = _Num4MJumpers * JUMPER_4M_ATTENUATION;
+        _LMR195Att = _LMR195Length_m * LMR195_ATTENUATION_PER_M;
+        _LMR240Att = _LMR240Length_m * LMR240_ATTENUATION_PER_M;
+        _LMR400Att = _LMR400Length_m * LMR400_ATTENUATION_PER_M;
+        _ConnectorsAtt = _NumConnectors * CONNECTOR_ATTENUATION;
+
+        _RFOutput = _RFInput_dB - _RFBarriersAtt - _1MJumpersAtt - _2MJumpersAtt - _4MJumpersAtt - _LMR195Att - _LMR400Att - _ConnectorsAtt - _RFIsolatorsAtt - _LMR240Att;
+        _RFOutput_mW = DBmToMilliwatt(_RFOutput);
+        System.Diagnostics.Debug.WriteLine("RF Output in dB {0:F2} and in mW {1:F2}", _RFOutput, _RFOutput_mW);
+
+        //RFOutputString = Math.Round(_RFOutput, 2).ToString();
+        //RFOutputmWString = Math.Round(_RFOutput_mW, 2).ToString();
+        //RFInputdBmString = Math.Round(_RFInput_dB, 2).ToString();
+        //RFInputString = Math.Round(_RFInput_mW, 2).ToString();
+        return Task.CompletedTask;
+    }
+
+    //////Change event arguments
+    private void InputPowerChange(ChangeEventArgs e)
+    {
+        _RFInput_mW = Convert.ToDouble(e.Value);
+        _RFInput_dB = MilliwattToDBm(_RFInput_mW);
+        // System.Diagnostics.Debug.WriteLine($"{input} milliwat");
+        ComputeOutputPower();
+        this.StateHasChanged();
+    }
+
+}

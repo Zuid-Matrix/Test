@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\Matrix.Prox3.IntelliZone.Blazor.props" />
+</Project>

@@ -1,0 +1,88 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using Microsoft.EntityFrameworkCore
+@using System.Threading.Tasks
+@using System.Drawing
+@inject HttpClient http
+
+@inject ILogger<LocatorTable> _logger
+
+
+<div class="m-4">
+	<div class="page-size-chooser">
+		Items per page:
+		<select @bind="@pagination.ItemsPerPage">
+			<option>10</option>
+			<option>20</option>
+			<option>50</option>
+			<option>100</option>
+			<option>200</option>
+		</select>
+	</div>
+
+	<div class="d-md-flex">
+		@if (tempApp != null)
+		{
+			<div class="me-md-2">
+				<QuickGrid class="table-bordered transparent-table" Items="@tempApp" Pagination="@pagination">
+					<PropertyColumn Property="@(p => p.Start)" Title="Start" Sortable="true" />
+					<PropertyColumn Property="@(p => p.Stop)" Title="Stop" Sortable="true" />
+					<PropertyColumn Property="@(p => p.active)" Title="Active" Sortable="true" />
+					<PropertyColumn Property="@(p => p.Stop != null ? ((DateTime)p.Stop).Subtract((DateTime)p.Start).Minutes : 0)" Title="Runtime (Minutes)" Sortable="true" />
+				</QuickGrid>
+	
+				<Paginator State="@pagination"/>
+			</div>
+		}
+
+		@if (tempControllers != null)
+		{
+			<div>
+				<QuickGrid class="table-bordered transparent-table" Items="@tempControllers" Pagination="@pagination">
+					<PropertyColumn Property="@(p => p.IP)" Title="IP" Sortable="true" />
+					<PropertyColumn Property="@(p => p.SiteID)" Title="Site" Sortable="true" />
+					<PropertyColumn Property="@(p => p.Connected)" Title="Connected" Sortable="true" />
+					<PropertyColumn Property="@(p => p.Disconnected)" Title="Disconnected" Sortable="true" />
+					<PropertyColumn Property="@(p => p.active)" Title="Active" Sortable="true" />
+					<PropertyColumn Property="@(p => p.Disconnected != null ? ((DateTime)p.Disconnected).Subtract((DateTime)p.Connected).Minutes : 0)" Title="Runtime (Minutes)" Sortable="true" />
+				</QuickGrid>
+					<Paginator State="@pagination"/>
+			</div>
+		}
+	</div>
+</div>
+		
+
+
+
+
+
+@code {
+
+
+	private PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+	private PaginationState pagination2 = new PaginationState { ItemsPerPage = 10 };
+	string mnidFIlter;
+	string nameFilter;
+	[Parameter]
+	public List<DeviceConnectionLog> Controllerlog { get; set; }
+
+
+	IQueryable<ApplicationRunLog> tempApp
+	{
+		get
+		{
+			var t = Task.Run( async () => await  http.GetFromJsonAsync<List<ApplicationRunLog>>("api/ApplicationRunLogs"));
+			t.Wait();
+			return t.Result.AsQueryable();
+		 }
+
+	}
+
+	IQueryable<DeviceConnectionLog> tempControllers
+	{
+		get
+		{
+			return Controllerlog.AsQueryable();
+		}
+	}
+}

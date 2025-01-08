@@ -1,0 +1,37 @@
+/*.combining-block {
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 100px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+}*/
+
+.quickgrid[theme=default][b-65o5cdqaw7] {
+    /* Adjust styles to suit your needs */
+    display: block !important;
+    height: auto !important;
+}
+/*.view-export-block {
+    display: flex;
+    flex-direction: row;
+    margin: 8px;
+    opacity: 0.8;
+    width: 900px;
+    height: 80px;
+    text-align: center;
+    Color: black;
+    background-Color: lightgray;
+    align-items: center;
+}
+
+.locator-display-block {
+    margin: 8px;
+    opacity: 0.8;
+    min-height: 300px;
+    width: 100%;
+    flex : 1;
+    text-align: center;
+    background-Color: lightgray;
+}

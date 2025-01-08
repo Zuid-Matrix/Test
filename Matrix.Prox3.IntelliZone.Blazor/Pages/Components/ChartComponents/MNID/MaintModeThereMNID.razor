@@ -1,0 +1,395 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using MudBlazor
+@inject IJSRuntime js
+
+@implements IDisposable
+
+
+<div class="">
+    <h6 class="fw-bold text-uppecase">@Label</h6>
+    <BarChart @ref="BarChart" Width="90" WidthUnit="Unit.Percentage" Class="mb-6 ms-3" />
+    <MudSlider Step="1" @bind-Value="MinValue" Max=@MaxValue Color="Color.Info">Minumum @Label : <span class="fw-bold">@MinValue</span></MudSlider>
+    <Button class="nav-item px-3 bg-secondary  rounded-2 m-1" @onclick="ShowModal">View Detail</Button>
+    <Button class="nav-item px-3 bg-secondary  rounded-2 m-1" @onclick="GetMaintReport">Generate Excel Report</Button>
+</div>
+
+
+@code {
+
+    [Parameter] public List<ZoneBreachSummary> Summaries_ZoneBreach { get; set; }
+    [Parameter] public List<EventlogReport>? MaintenanceModeEvents { get; set; }
+    public string Label = "Maintenance Mode There";
+
+    [Parameter]
+    public List<Section> Sections { get; set; }
+    [Parameter]
+    public int Interval { get; set; }
+    [Parameter]
+    public int[] SectionIDs { get; set; }
+    [Parameter]
+    public DateTime DateFrom { get; set; }
+    [Parameter]
+    public DateTime DateTo { get; set; }
+
+    private Calendar cal = new CultureInfo("en-US").Calendar;
+    private BarChart BarChart = default!;
+    private BarChartOptions BarChartOptions = default!;
+    private ChartData chartData = default!;
+    private int MinValue = 5;
+    private int MaxValue = 100;
+    private List<int> weeks = new();
+    private List<DateTime> days = new();
+    private List<int> months = new();
+    private List<int> years = new();
+    //private int datasetsCount = 0;
+    private int labelsCount = 0;
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+    [CascadingParameter] IModalService ModalService { get; set; } = default!;
+
+    protected override  void OnInitialized()
+    {     
+        BarChartOptions = new BarChartOptions { Responsive = true, Interaction = new Interaction { Mode = InteractionMode.Index } };
+        BarChartOptions.Scales.Y.Title = new ChartAxesTitle { Text = $"Number of {Label}", Display = true };
+    }
+
+
+    private void ShowModal()
+    {
+        if (MaintenanceModeEvents.Any())
+        {
+            var options = new ModalOptions()
+                {
+                    Size = Blazored.Modal.ModalSize.Automatic,
+
+                };
+            ModalParameters data = new ModalParameters().Add(nameof(MaintenanceModeModal.tempList), MaintenanceModeEvents.AsQueryable());
+            ModalService.Show<MaintenanceModeModal>("Maintenance Mode Detail", data, options);
+        }
+        else
+        {
+            ModalParameters message = new ModalParameters().Add(nameof(PopupMessage.BodyText), "There is no maintenance mode events to show");
+            ModalService.Show<PopupMessage>("Info", message);
+        }
+
+    }
+
+    private async void GetMaintReport()
+    {
+
+
+        List<int> reports = new();
+        reports.Add(0);
+        reports.Add(1);
+
+   
+      //  await js.InvokeVoidAsync("BlazorDownloadFile", $"MaintModeReport_{DateTime.Now}.xlsx", await evserver.GetReportFromList(MaintenanceModeEvents,Summaries_ZoneBreach, reports));
+
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        if (Interval == 1)
+        {
+            weeks = Summaries_ZoneBreach.Where(s => s.Date >= DateFrom && s.Date <= DateTo).Select(s => cal.GetWeekOfYear(s.Date, CalendarWeekRule.FirstDay, DayOfWeek.Monday)).Order().Distinct().ToList();
+            await GetDataSetsWeek();
+
+        }
+        else if (Interval == 2)
+        {
+            months = Summaries_ZoneBreach.Where(s => s.Date >= DateFrom && s.Date <= DateTo).Select(s => s.Date.Month).Distinct().Order().ToList();
+            await GetDataSetsMonth();
+        }
+        else if (Interval == 0)
+        {
+            days = Summaries_ZoneBreach.Where(s => s.Date >= DateFrom && s.Date <= DateTo).Select(s => s.Date).Distinct().Order().ToList();
+            await GetDataSetsDay();
+        }
+        else if (Interval == 3)
+        {
+            years = Summaries_ZoneBreach.Where(s => s.Date >= DateFrom && s.Date <= DateTo).Select(s => s.Date.Year).Order().Distinct().ToList();
+           await GetDataSetsYear();
+        }
+
+        if (firstRender)
+        {
+            await BarChart.InitializeAsync(chartData, BarChartOptions);
+        }
+        await base.OnAfterRenderAsync(firstRender);
+
+    }
+
+    public void Dispose()
+    {
+
+    }
+
+
+
+
+    private async Task ShowHorizontalBarChartAsync()
+    {
+        BarChartOptions.IndexAxis = "y";
+        await BarChart.UpdateAsync(chartData, BarChartOptions);
+    }
+
+    private async Task ShowVerticalBarChartAsync()
+    {
+        BarChartOptions.IndexAxis = "x";
+        await BarChart.UpdateAsync(chartData, BarChartOptions);
+    }
+
+    #region Week Data
+
+    private async Task  GetDataSetsWeek()
+    {
+
+        List<string> labels = new();
+        List<int> indexes = new();
+        foreach (var index in weeks)
+        {
+            labels.Add($"Week {index}");
+            indexes.Add(index);
+        }
+
+        var datasets = new List<IChartDataset>();
+        var datasetsCount = 0;
+
+        foreach(var declocator in Summaries_ZoneBreach.Select(s=> s.myLocator.decMNID).Distinct())
+        {
+            var locator = Summaries_ZoneBreach.FirstOrDefault(s => s.myLocator.decMNID == declocator).myLocator;
+            var temp = GetDataforWeek(declocator, indexes);
+            
+   
+            if (temp.Max() >= Convert.ToDouble(MinValue))
+            {
+                datasetsCount++;
+                if (datasetsCount >= ReportingColors.CustomPalette200.Count())
+                {
+                    datasetsCount = 0;
+                }
+                var c = ReportingColors.CustomPalette200.ToList()[datasetsCount].ToString(); ;
+                datasets.Add(new BarChartDataset()
+                    {
+                        Label = $"{locator.MNID}",
+                        Data = temp,
+                        BackgroundColor = new List<string> { $"{c}" },
+                        BorderColor = new List<string> { $"{c}" },
+                        BorderWidth = new List<double> { 0 },
+                    });
+
+            }
+
+        }
+        chartData = new ChartData { Labels = labels, Datasets = datasets };
+        if (BarChart != null)
+        {
+            await BarChart.UpdateAsync(chartData, BarChartOptions);
+        }
+
+    }
+
+    private List<double?> GetDataforWeek(uint locator, List<int> indexes)
+    {
+        var data = new List<double?>();
+        foreach (var index in indexes)
+        {
+            data.Add(Convert.ToInt64(Summaries_ZoneBreach.Where(s => s.myLocator.decMNID == locator && cal.GetWeekOfYear(s.Date, CalendarWeekRule.FirstDay, DayOfWeek.Monday) == index).Select(t =>t.MaintMode_there).Sum()));
+        }
+
+        return data;
+    }
+
+    #endregion Week Data
+
+    #region Month Data
+    private async Task GetDataSetsMonth()
+    {
+        List<string> labels = new();
+        List<int> indexes = new();
+        List<ZoneBreachSummary>  tempsum = new();
+
+        foreach (var index in months)
+        {
+            labels.Add($"{CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(index)}");
+            indexes.Add(index);
+
+        }
+
+        var datasets = new List<IChartDataset>();
+        var datasetsCount = 0;
+
+        foreach (var locator in Summaries_ZoneBreach.Select(s => s.myLocator).Distinct())
+        {
+            var temp = GetDataforMonth(locator, indexes);
+            if (temp.Max() > MaxValue)
+            {
+                MaxValue = Convert.ToInt32(Math.Round(Convert.ToDecimal(temp.Max())));
+            }
+            if (temp.Max() >= MinValue)
+            {
+                datasetsCount++;
+                if (datasetsCount >= ReportingColors.CustomPalette200.Count())
+                {
+                    datasetsCount = 0;
+                }
+                var c = ReportingColors.CustomPalette200.ToList()[datasetsCount].ToString();
+                datasets.Add(new BarChartDataset()
+                    {
+                        Label = $"{locator.MNID}",
+                        Data = temp,
+                        BackgroundColor = new List<string> { $"{c}" },
+                        BorderColor = new List<string> { $"{c}" },
+                        BorderWidth = new List<double> { 0 },
+                    });
+            }
+        }
+
+        chartData = new ChartData { Labels = labels, Datasets = datasets };
+        if (BarChart != null)
+        {
+            await BarChart.UpdateAsync(chartData, BarChartOptions);
+        }
+        //  StateHasChanged();
+        //  return datasets;
+    }
+
+    private List<double?> GetDataforMonth(Locator locator, List<int> indexes)
+    {
+        var data = new List<double?>();
+        foreach (var index in indexes)
+        {
+            data.Add(Convert.ToInt64(Summaries_ZoneBreach.Where(s => s.myLocator == locator && s.Date.Month == index).Select(t => t.MaintMode_there).Sum()));
+
+        }
+        return data;
+    }
+
+
+    #endregion Month Data
+
+    #region Day Data
+    private async Task GetDataSetsDay()
+    {
+        List<string> labels = new();
+        List<DateTime> indexes = new();
+
+
+        foreach (var index in days)
+        {
+            labels.Add(index.ToString("dd/MM/yy"));
+            indexes.Add(index);
+        }
+
+        var datasets = new List<IChartDataset>();
+        var datasetsCount = 0;
+        foreach (var locator in Summaries_ZoneBreach.Select(s => s.myLocator).Distinct())
+        {
+            var temp = GetDataforDay(locator, indexes);
+            if (temp.Max() > MaxValue)
+            {
+                MaxValue = Convert.ToInt32(Math.Round(Convert.ToDecimal(temp.Max())));
+            }
+            if (temp.Max() >= MinValue)
+            {
+                datasetsCount++;
+                if (datasetsCount >= ReportingColors.CustomPalette200.Count())
+                {
+                    datasetsCount = 0;
+                }
+                var c = ReportingColors.CustomPalette200.ToList()[datasetsCount].ToString(); ;
+                datasets.Add(new BarChartDataset()
+                    {
+                        Label = $"{locator.MNID}",
+                        Data = temp,
+                        BackgroundColor = new List<string> { $"{c}" },
+                        BorderColor = new List<string> { $"{c}" },
+                        BorderWidth = new List<double> { 0 },
+                    });
+            }
+        }
+        chartData = new ChartData { Labels = labels, Datasets = datasets };
+
+        if (BarChart != null)
+        {
+            await BarChart.UpdateAsync(chartData, BarChartOptions);
+        }
+        //  StateHasChanged();
+        //  return datasets;
+    }
+
+    private List<double?> GetDataforDay(Locator locator ,List<DateTime> indexes)
+    {
+        var data = new List<double?>();
+        foreach (var index in indexes)
+        {
+            data.Add(Convert.ToInt64(Summaries_ZoneBreach.Where(s => s.myLocator == locator && s.Date == index).Select(t => t.MaintMode_there).Sum()));
+
+        }
+        return data;
+    }
+
+
+    #endregion Day Data
+    #region Year Data
+    private async Task GetDataSetsYear()
+    {
+        List<string> labels = new();
+        List<int> indexes = new();
+
+
+        foreach (var index in years)
+        {
+            labels.Add($"{index}");
+            indexes.Add(index);
+        }
+
+        var datasets = new List<IChartDataset>();
+        var datasetsCount = 0;
+        foreach (var locator in Summaries_ZoneBreach.Select(s => s.myLocator).Distinct())
+        {
+            var temp = GetDataforYear(locator, indexes);
+            if (temp.Max() > MaxValue)
+            {
+                MaxValue = Convert.ToInt32(Math.Round(Convert.ToDecimal(temp.Max())));
+            }
+            if (temp.Max() >= MinValue)
+            {
+                datasetsCount++;
+                if (datasetsCount >= ReportingColors.CustomPalette200.Count())
+                {
+                    datasetsCount = 0;
+                }
+                var c = ReportingColors.CustomPalette200.ToList()[datasetsCount].ToString(); ;
+                datasets.Add(new BarChartDataset()
+                    {
+                        Label = $"{locator.MNID}",
+                        Data = GetDataforYear(locator, indexes),
+                        BackgroundColor = new List<string> { $"{c}" },
+                        BorderColor = new List<string> { $"{c}" },
+                        BorderWidth = new List<double> { 0 },
+                    });
+            }
+        }
+        chartData = new ChartData { Labels = labels, Datasets = datasets };
+        if (BarChart != null)
+        {
+            await BarChart.UpdateAsync(chartData, BarChartOptions);
+        }
+        //  StateHasChanged();
+        //  return datasets;
+    }
+
+    private List<double?> GetDataforYear(Locator locator, List<int> indexes)
+    {
+        var data = new List<double?>();
+        foreach (var index in indexes)
+        {
+            data.Add(Convert.ToInt64(Summaries_ZoneBreach.Where(s => s.myLocator == locator && s.Date.Year == index).Select(t => t.MaintMode_there).Sum()));
+
+        }
+        return data;
+    }
+    #endregion Year Data
+} 

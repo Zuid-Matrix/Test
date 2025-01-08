@@ -1,0 +1,111 @@
+﻿@inject IConfiguration _config
+
+<div class="sidebar @(collapseNavMenu ? "collapsed" : "expanded")" @onmouseenter="ExpandNavMenu" @onmouseleave="CollapseNavMenu">
+    <ul class="nav flex-column">
+        @if (string.IsNullOrEmpty(currentMenu))
+        {
+            <!-- Main Menu View -->
+            <li class="nav-item nav-L1">
+                <NavLink @onclick='() => OpenSubMenu("Live")' class="nav-link">
+
+                    <div class="nav-item-content">
+                        <img src="/IntelliZone icon_Live.png" class="nav-item-icon" />
+                        <span class="nav-item-text3 @(collapseNavMenu ? "d-none" : "")">Live</span>
+                    </div>
+                </NavLink>
+            </li>
+            <li class="nav-item nav-L1">
+                <NavLink @onclick='() => OpenSubMenu("Reporting")' class="nav-link">
+                    <div class="nav-item-content">
+                        <img src="/IntelliZone icon_Report.png" class="nav-item-icon" />
+                        <span class="nav-item-text3 @(collapseNavMenu ? "d-none" : "")">Reporting</span>
+                    </div>
+                </NavLink>
+            </li>
+            <li class="nav-item nav-L1">
+                <NavLink href="/tools" class="nav-link">
+                    <div class="nav-item-content">
+                        <img src="/IntelliZone icon_Tool.png" class="nav-item-icon" />
+                        <span class="nav-item-text3 @(collapseNavMenu ? "d-none" : "")">Tools</span>
+                    </div>
+                </NavLink>
+            </li>
+            <li class="nav-item nav-L1">
+                <NavLink href="/configuration" class="nav-link">
+                    <div class="nav-item-content">
+                        <img src="/IntelliZone icon_Configuration.png" class="nav-item-icon" />
+                        <span class="nav-item-text3 @(collapseNavMenu ? "d-none" : "")">Configuration</span>
+                    </div>
+                </NavLink>
+            </li>
+        }
+        else
+        {
+            <!-- Submenu View -->
+            <li class="nav-item nav-L1">
+                <button class="btn btn-link" @onclick="GoBack">
+                    ← Back
+                </button>
+            </li>
+
+            @if (currentMenu == "Live")
+            {
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/live">
+                        <span class="nav-item-text3">Overview</span>
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/lamproomdebug">
+                        <span class="nav-item-text3">Debug</span>
+                    </NavLink>
+                </li>
+            }
+            else if (currentMenu == "Reporting")
+            {
+                <li class="nav-item">
+                    <Button Type="ButtonType.Link" @onclick="@(() => Modal.Show<UploadDataModal>("Upload Prox Package"))">
+                        <span class="nav-item-text3">Upload Data</span>
+                    </Button>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/eventlogreporting">
+                        <span class="nav-item-text3">Reports</span>
+                    </NavLink>
+                </li>
+            }
+        }
+    </ul>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+    private string? currentMenu; // To track the current menu
+    private bool expandSettings = false;
+    private bool expandTools = false;
+    private bool expandReporting = false;
+    private bool expandLive = false;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    [CascadingParameter] public IModalService Modal { get; set; } = default!;
+
+    private void ExpandNavMenu()
+    {
+        collapseNavMenu = false;
+    }
+
+    private void CollapseNavMenu()
+    {
+        collapseNavMenu = true;
+    }
+
+    private void OpenSubMenu(string menuName)
+    {
+        currentMenu = menuName; // Set the current menu
+    }
+
+    private void GoBack()
+    {
+        currentMenu = null; // Go back to the main menu
+    }
+}

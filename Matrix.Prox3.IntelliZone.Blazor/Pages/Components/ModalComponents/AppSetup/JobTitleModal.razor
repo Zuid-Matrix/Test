@@ -1,0 +1,89 @@
+﻿@namespace Matrix.Prox3.IntelliZone.Blazor.Components
+@using System.Security.Claims
+@inject HttpClient http
+<body class="w-100 m-0">
+				
+
+	@if (jobLevel != null)
+	{
+
+			<div class="mb-1 d-flex justify-content-between">
+				<div class="fw-bolder col-6">Job Title:</div>	<div class="col-6">	<InputText class="form-control" type="text" @bind-Value="jobLevel.Type" /></div>
+			</div>
+
+
+
+			<div class="d-flex flex-row p-3 justify-content-center">
+			
+				<Button Type="ButtonType.Submit" Active=false class="btn-outline-success" @onclick="Add">
+					@if (BlazoredModal.Title.Contains("Edit"))
+					{
+						<div>Update Job Title</div>
+					}
+					else
+					{
+						<div>Add Job Title</div>
+					}
+				</Button>
+		
+			</div>
+		
+	}	
+					
+</body>
+
+	
+
+
+
+@code {
+
+	[CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+	[CascadingParameter] IModalService ModalService { get; set; } = default!;
+
+
+	
+
+	[Parameter]
+	public JobLevel? jobLevel { get; set; }
+
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		
+		if (jobLevel == null)
+		{
+			jobLevel = new();
+		}
+		Console.WriteLine();
+	}
+
+	private async Task Close() => await BlazoredModal.CloseAsync();
+
+	private async Task Add()
+	{
+
+		try
+		{
+			
+			var t = await http.PostAsJsonAsync<JobLevel>("api/JobLevels", jobLevel);
+			if (t.IsSuccessStatusCode)
+			{
+				await Close();
+			}
+			else
+			{
+				ModalParameters message = new ModalParameters().Add(nameof(PopupMessage.BodyText), $"Status Code: {t.StatusCode} - {t.Content}");
+				ModalService.Show<PopupMessage>("Could not create/update Job Description", message);
+			}
+
+			await Close();
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine(e);
+		}
+	}
+
+}

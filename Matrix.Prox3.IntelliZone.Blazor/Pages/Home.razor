@@ -1,0 +1,50 @@
+﻿@page "/"
+@inject NavigationManager Navigation
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.SignalR.Client
+@using Newtonsoft.Json
+@using System.Web
+@inject IConfiguration _configuration
+@inject ILogger<Home> _logger
+<PageTitle>IntelliZone</PageTitle>
+
+
+<div class="mx-auto d-flex align-items-center">
+	<h1>Welcome!</h1>
+
+</div>
+
+
+
+
+
+@code {
+
+	protected override async Task OnInitializedAsync()
+	{
+		
+			if (_configuration["AppConfiguration"] == "OnPremServer" || _configuration["AppConfiguration"] == "OnPremServerLite" || _configuration["AppConfiguration"] == "CageCounter")
+			{
+
+				Navigation.NavigateTo($"{Navigation.BaseUri}api/Login/LoginApplication?url={HttpUtility.UrlEncode(Navigation.BaseUri)}live");
+
+			}
+			else if (_configuration["AppConfiguration"] == "DesktopUtility")
+			{
+				Navigation.NavigateTo($"{Navigation.BaseUri}api/Login/LoginApplication?url={HttpUtility.UrlEncode(Navigation.BaseUri)}live");
+			}
+			else
+			{
+				//Navigation.NavigateTo($"{Navigation.BaseUri}api/Login/LoginApplication?url=live");
+				Navigation.NavigateTo("eventlogreporting");
+			}
+		}
+
+		
+
+		
+		//   
+	}
+
+
+}
