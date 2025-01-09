@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\Matrix.Prox3.IntelliZone.Blazor.props" />
-</Project>
